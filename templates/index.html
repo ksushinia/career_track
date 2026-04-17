@@ -1,0 +1,19 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <h1>Актуальные мероприятия</h1>
+    <p>Участвуй и получай баллы для повышения уровня!</p>
+    
+    <div class="events-grid">
+        {% for event in events %}
+            <div class="card">
+                <h3>{{ event.title }}</h3>
+                <p><strong>Формат:</strong> {{ event.eventFormat.name if event.eventFormat else 'Не указан' }}</p>
+                <p><strong>Место:</strong> {{ event.location if event.location else 'Онлайн/Не указано' }}</p>
+                <button class="btn" onclick="alert('В MVP записываемся мысленно :) Запись даст +50 баллов!')">Участвовать (+50 XP)</button>
+            </div>
+        {% else %}
+            <p>К сожалению, мероприятия не найдены.</p>
+        {% endfor %}
+    </div>
+{% endblock %}

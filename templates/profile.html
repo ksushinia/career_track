@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <div class="profile-header">
+        <h1>Профиль участника: {{ user.name }}</h1>
+        <p class="status">Статус: {{ user.status }}</p>
+    </div>
+
+    <div class="gamification-panel">
+        <h2>Уровень {{ level }} ({{ user.points }} XP)</h2>
+        <div class="progress-bar-bg">
+            <div class="progress-bar-fill" style="width: {{ progress }}%;"></div>
+        </div>
+        <p><small>{{ 100 - progress }} XP до следующего уровня</small></p>
+    </div>
+
+    <div class="history-panel">
+        <h3>Мои достижения (Посещенные мероприятия)</h3>
+        <ul>
+            {% for ev in user.attended_events %}
+                <li>✅ {{ ev }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+{% endblock %}
