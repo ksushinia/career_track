@@ -42,11 +42,21 @@
                 <p><strong>Место:</strong> {{ event.location if event.location else 'Онлайн/Не указано' }}</p>
 
                 {% if current_user.is_authenticated %}
-                    <form action="/participate" method="POST" style="margin-top: 15px;">
-                        <input type="hidden" name="event_id" value="{{ event.id }}">
-                        <input type="hidden" name="event_title" value="{{ event.title }}">
-                        <button type="submit" class="btn">Участвовать (+50 XP)</button>
-                    </form>
+                    <div style="display: flex; gap: 10px; margin-top: 15px;">
+                        <form action="/participate" method="POST" style="flex: 1;">
+                            <input type="hidden" name="event_id" value="{{ event.id }}">
+                            <input type="hidden" name="event_title" value="{{ event.title }}">
+                            <button type="submit" class="btn" style="width: 100%; box-sizing: border-box;">Записаться (+50 XP)</button>
+                        </form>
+
+                        <form action="/toggle_fav_event" method="POST">
+                            <input type="hidden" name="event_id" value="{{ event.id }}">
+                            <input type="hidden" name="event_title" value="{{ event.title }}">
+                            <button type="submit" class="btn" style="background: {{ '#e74c3c' if event.id in fav_event_ids else '#ecf0f1' }}; color: {{ '#fff' if event.id in fav_event_ids else '#333' }}; font-size: 1.2em; padding: 10px; width: 45px;" title="Добавить в избранное">
+                                ❤
+                            </button>
+                        </form>
+                    </div>
                 {% else %}
                     <p style="margin-top: 15px; color: #e74c3c; font-size: 0.9em;">Войдите, чтобы получать баллы за участие!</p>
                 {% endif %}

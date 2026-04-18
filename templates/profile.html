@@ -1,29 +1,114 @@
 {% extends 'base.html' %}
 
 {% block content %}
-    <div class="profile-header">
-        <h1>Профиль участника: {{ user.name }}</h1>
-        <p class="status">Статус: {{ user.status }}</p>
+    <div class="profile-header" style="margin-bottom: 20px;">
+        <h1>Профиль: {{ user.name }}</h1>
+        <p class="status">Академический статус: <strong>{{ user.status }}</strong></p>
     </div>
 
-    <div class="gamification-panel">
-        <h2>Уровень {{ level }} ({{ user.points }} XP)</h2>
-        <div class="progress-bar-bg">
-            <div class="progress-bar-fill" style="width: {{ progress }}%;"></div>
+    <!-- Создаем сетку из 2 колонок для профиля -->
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; align-items: start;">
+
+        <!-- Левая колонка: Прогресс и Радар -->
+        <div>
+            <div class="gamification-panel">
+                <h2>Уровень {{ level }} ({{ user.points }} XP)</h2>
+                <div class="progress-bar-bg">
+                    <div class="progress-bar-fill" style="width: {{ progress }}%;"></div>
+                </div>
+                <p><small>{{ 100 - progress }} XP до следующего уровня</small></p>
+            </div>
+
+            <!-- РАДАР КОМПЕТЕНЦИЙ -->
+            <div class="history-panel" style="margin-top: 20px; text-align: center;">
+                <h3>Мои компетенции</h3>
+                <canvas id="radarChart" width="400" height="400"></canvas>
+            </div>
         </div>
-        <p><small>{{ 100 - progress }} XP до следующего уровня</small></p>
+
+        <!-- Правая колонка: История и Избранное -->
+        <div>
+            <div class="history-panel">
+                <h3>📚 Посещенные мероприятия</h3>
+                {% if user.participations %}
+                    <ul style="padding-left: 20px;">
+                        {% for p in user.participations %}
+                            <li style="margin-bottom: 8px;">✅ {{ p.event_title }} <br><small style="color: #3498db;">[{{ p.category }}]</small></li>
+                        {% endfor %}
+                    </ul>
+                {% else %}
+                    <p style="color: #7f8c8d;">Вы еще не записались на мероприятия.</p>
+                {% endif %}
+            </div>
+
+            <div class="history-panel" style="margin-top: 20px;">
+                <h3>❤ Избранные мероприятия</h3>
+                {% if user.favorite_events %}
+                    <ul style="padding-left: 20px;">
+                        {% for fav in user.favorite_events %}
+                            <li style="margin-bottom: 8px;">{{ fav.event_title }}</li>
+                        {% endfor %}
+                    </ul>
+                {% else %}
+                    <p style="color: #7f8c8d;">Нет сохраненных мероприятий.</p>
+                {% endif %}
+            </div>
+
+            <div class="history-panel" style="margin-top: 20px;">
+                <h3>💼 Избранные вакансии</h3>
+                {% if user.favorite_vacancies %}
+                    <ul style="padding-left: 20px;">
+                        {% for fav in user.favorite_vacancies %}
+                            <li style="margin-bottom: 8px;">
+                                {{ fav.vacancy_title }}
+                                {% if fav.hh_url %}
+                                    <a href="{{ fav.hh_url }}" target="_blank" style="font-size: 0.8em; color: #2ecc71;">[Ссылка]</a>
+                                {% endif %}
+                            </li>
+                        {% endfor %}
+                    </ul>
+                {% else %}
+                    <p style="color: #7f8c8d;">Нет сохраненных вакансий.</p>
+                {% endif %}
+            </div>
+        </div>
     </div>
 
-    <div class="history-panel">
-        <h3>Мои достижения (Посещенные мероприятия)</h3>
-        {% if user.participations %}
-            <ul>
-                {% for p in user.participations %}
-                    <li>✅ {{ p.event_title }} <span style="color: #888; font-size: 0.8em;">(Запись оформлена)</span></li>
-                {% endfor %}
-            </ul>
-        {% else %}
-            <p>Ты пока не записался ни на одно мероприятие.</p>
-        {% endif %}
-    </div>
+    <!-- ПОДКЛЮЧАЕМ CHART.JS -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const ctx = document.getElementById('radarChart').getContext('2d');
+
+            // Получаем данные из Flask
+            const labels = JSON.parse('{{ radar_labels | safe }}');
+            const data = JSON.parse('{{ radar_data | safe }}');
+
+            new Chart(ctx, {
+                type: 'radar',
+                data: {
+                    labels: labels,
+                    datasets:[{
+                        label: 'Количество участий',
+                        data: data,
+                        backgroundColor: 'rgba(52, 152, 219, 0.4)',
+                        borderColor: 'rgba(41, 128, 185, 1)',
+                        pointBackgroundColor: 'rgba(41, 128, 185, 1)',
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    scales: {
+                        r: {
+                            beginAtZero: true,
+                            ticks: { stepSize: 1, precision: 0 } // Показывать только целые числа
+                        }
+                    },
+                    plugins: {
+                        legend: { display: false } // Убираем лишнюю легенду
+                    }
+                }
+            });
+        });
+    </script>
 {% endblock %}

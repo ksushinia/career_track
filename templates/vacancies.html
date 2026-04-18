@@ -20,19 +20,23 @@
             <div class="card" style="display: flex; flex-direction: column; justify-content: space-between;">
                 <div>
                     <!-- Логотип организации (если есть) и название -->
-                    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
-                        {% if vacancy.organization and vacancy.organization.logo %}
-                            <img src="{{ vacancy.organization.logo.url }}" alt="Logo" style="width: 40px; height: 40px; object-fit: contain; border-radius: 4px;">
+                    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 15px;">
+                        <!-- Добавили проверку на .url и onerror, чтобы скрыть сломанные картинки -->
+                        {% if vacancy.organization and vacancy.organization.logo and vacancy.organization.logo.url %}
+                            <img src="{{ vacancy.organization.logo.url }}" alt="Логотип"
+                                 style="width: 40px; height: 40px; object-fit: contain; border-radius: 4px;"
+                                 onerror="this.style.display='none'">
                         {% endif %}
-                        <h3 style="margin: 0; font-size: 1.1em;">{{ vacancy.name }}</h3>
+                        <!-- Немного поправили отступы заголовка -->
+                        <h3 style="margin: 0; font-size: 1.1em; line-height: 1.2;">{{ vacancy.name }}</h3>
                     </div>
-                    
+
                     <p style="color: #7f8c8d; margin-top: 0;">
                         {{ vacancy.organization.name if vacancy.organization else 'Организация не указана' }}
                     </p>
 
                     <!-- Зарплата -->
-                    <p><strong>Зарплата:</strong> 
+                    <p><strong>Зарплата:</strong>
                         {% if vacancy.salaryFrom and vacancy.salaryUpTo %}
                             {{ vacancy.salaryFrom }} - {{ vacancy.salaryUpTo }} ₽
                         {% elif vacancy.salaryFrom %}
@@ -46,7 +50,7 @@
 
                     <!-- Требования -->
                     <p><strong>Опыт:</strong> {{ vacancy.experience.name if vacancy.experience else 'Не указан' }}</p>
-                    <p><strong>График:</strong> 
+                    <p><strong>График:</strong>
                         {% if vacancy.schedule and vacancy.schedule|length > 0 %}
                             {{ vacancy.schedule[0].name }}
                         {% else %}
@@ -56,11 +60,28 @@
                 </div>
 
                 <!-- Кнопка отклика -->
-                <div style="margin-top: 15px;">
+                <div style="margin-top: 15px; display: flex; gap: 10px;">
                     {% if vacancy.hhUrl %}
-                        <a href="{{ vacancy.hhUrl }}" target="_blank" class="btn" style="text-align: center; display: block; text-decoration: none; background: #27ae60;">Смотреть на HH.ru</a>
+                        <a href="{{ vacancy.hhUrl }}" target="_blank" class="btn"
+                           style="text-align: center; text-decoration: none; background: #27ae60; box-sizing: border-box; flex: 1;">
+                           Смотреть на HH.ru
+                        </a>
                     {% else %}
-                        <button class="btn" disabled style="background: #bdc3c7; cursor: not-allowed;">Отклик недоступен</button>
+                        <button class="btn" disabled
+                                style="background: #bdc3c7; cursor: not-allowed; box-sizing: border-box; flex: 1;">
+                                Отклик недоступен
+                        </button>
+                    {% endif %}
+
+                    {% if current_user.is_authenticated %}
+                    <form action="/toggle_fav_vacancy" method="POST">
+                        <input type="hidden" name="vacancy_id" value="{{ vacancy.id }}">
+                        <input type="hidden" name="vacancy_title" value="{{ vacancy.name }}">
+                        <input type="hidden" name="hh_url" value="{{ vacancy.hhUrl or '' }}">
+                        <button type="submit" class="btn" style="background: {{ '#e74c3c' if vacancy.id in fav_vacancy_ids else '#ecf0f1' }}; color: {{ '#fff' if vacancy.id in fav_vacancy_ids else '#333' }}; font-size: 1.2em; padding: 10px; width: 45px;" title="Сохранить вакансию">
+                            ❤
+                        </button>
+                    </form>
                     {% endif %}
                 </div>
             </div>
