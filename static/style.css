@@ -11,3 +11,39 @@ body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; 
 .progress-bar-bg { background: #e0e0e0; border-radius: 10px; height: 20px; width: 100%; overflow: hidden; }
 .progress-bar-fill { background: #2ecc71; height: 100%; transition: width 0.5s ease-in-out; }
 .history-panel { background: white; padding: 20px; border-radius: 8px; }
+.pagination { display: flex; justify-content: center; align-items: center; gap: 20px; margin-top: 40px; margin-bottom: 40px; }
+.btn-page { background: #2c3e50; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; font-weight: bold; }
+.btn-page:hover { background: #1a252f; }
+.page-info { font-weight: bold; color: #555; }
+/* Стили для панели фильтров */
+.filters-panel {
+    background: white;
+    padding: 15px 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    margin-bottom: 20px;
+}
+.filters-panel form {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    align-items: center;
+}
+.filters-panel input[type="text"], .filters-panel select {
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    flex-grow: 1; /* Чтобы строка поиска занимала максимум места */
+    min-width: 200px;
+}
+.btn-secondary {
+    background: #95a5a6;
+    color: white;
+    padding: 10px 15px;
+    border-radius: 5px;
+    text-decoration: none;
+    text-align: center;
+}
+.btn-secondary:hover {
+    background: #7f8c8d;
+}

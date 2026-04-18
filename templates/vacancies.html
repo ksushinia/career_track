@@ -1,0 +1,89 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <h1>Вакансии и стажировки</h1>
+    <p>Найди лабораторию или компанию для старта научной карьеры.</p>
+    
+    <div class="filters-panel">
+        <form method="GET" action="/vacancies">
+            <input type="text" name="search" placeholder="Поиск по названию или должности..." value="{{ search_query }}">
+            
+            <input type="number" name="salary_from" placeholder="Зарплата от (₽)" value="{{ salary_from }}">
+
+            <button type="submit" class="btn" style="width: auto;">Найти</button>
+            <a href="/vacancies" class="btn btn-secondary">Сбросить</a>
+        </form>
+    </div>
+
+    <div class="events-grid">
+        {% for vacancy in vacancies %}
+            <div class="card" style="display: flex; flex-direction: column; justify-content: space-between;">
+                <div>
+                    <!-- Логотип организации (если есть) и название -->
+                    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+                        {% if vacancy.organization and vacancy.organization.logo %}
+                            <img src="{{ vacancy.organization.logo.url }}" alt="Logo" style="width: 40px; height: 40px; object-fit: contain; border-radius: 4px;">
+                        {% endif %}
+                        <h3 style="margin: 0; font-size: 1.1em;">{{ vacancy.name }}</h3>
+                    </div>
+                    
+                    <p style="color: #7f8c8d; margin-top: 0;">
+                        {{ vacancy.organization.name if vacancy.organization else 'Организация не указана' }}
+                    </p>
+
+                    <!-- Зарплата -->
+                    <p><strong>Зарплата:</strong> 
+                        {% if vacancy.salaryFrom and vacancy.salaryUpTo %}
+                            {{ vacancy.salaryFrom }} - {{ vacancy.salaryUpTo }} ₽
+                        {% elif vacancy.salaryFrom %}
+                            от {{ vacancy.salaryFrom }} ₽
+                        {% elif vacancy.salaryUpTo %}
+                            до {{ vacancy.salaryUpTo }} ₽
+                        {% else %}
+                            Не указана
+                        {% endif %}
+                    </p>
+
+                    <!-- Требования -->
+                    <p><strong>Опыт:</strong> {{ vacancy.experience.name if vacancy.experience else 'Не указан' }}</p>
+                    <p><strong>График:</strong> 
+                        {% if vacancy.schedule and vacancy.schedule|length > 0 %}
+                            {{ vacancy.schedule[0].name }}
+                        {% else %}
+                            Не указан
+                        {% endif %}
+                    </p>
+                </div>
+
+                <!-- Кнопка отклика -->
+                <div style="margin-top: 15px;">
+                    {% if vacancy.hhUrl %}
+                        <a href="{{ vacancy.hhUrl }}" target="_blank" class="btn" style="text-align: center; display: block; text-decoration: none; background: #27ae60;">Смотреть на HH.ru</a>
+                    {% else %}
+                        <button class="btn" disabled style="background: #bdc3c7; cursor: not-allowed;">Отклик недоступен</button>
+                    {% endif %}
+                </div>
+            </div>
+        {% else %}
+            <div style="grid-column: 1 / -1; text-align: center; padding: 40px;">
+                <h3>Нет подходящих вакансий 😔</h3>
+                <p>Попробуй изменить параметры фильтра</p>
+            </div>
+        {% endfor %}
+    </div>
+
+    <!-- Пагинация -->
+    {% if total_pages > 1 %}
+    <div class="pagination">
+        {% if current_page > 1 %}
+            <a href="/vacancies?page={{ current_page - 1 }}&search={{ search_query }}&salary_from={{ salary_from }}" class="btn-page">❮ Назад</a>
+        {% endif %}
+
+        <span class="page-info">Страница {{ current_page }} из {{ total_pages }}</span>
+
+        {% if current_page < total_pages %}
+            <a href="/vacancies?page={{ current_page + 1 }}&search={{ search_query }}&salary_from={{ salary_from }}" class="btn-page">Вперед ❯</a>
+        {% endif %}
+    </div>
+    {% endif %}
+{% endblock %}

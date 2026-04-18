@@ -4,16 +4,72 @@
     <h1>Актуальные мероприятия</h1>
     <p>Участвуй и получай баллы для повышения уровня!</p>
     
+    <div class="filters-panel">
+        <form method="GET" action="/">
+            <input type="text" name="search" placeholder="Поиск по названию..." value="{{ search_query }}">
+
+            <select name="format">
+                <option value="">Все форматы</option>
+                <option value="offline" {{ 'selected' if event_format == 'offline' else '' }}>Очное</option>
+                <option value="online" {{ 'selected' if event_format == 'online' else '' }}>Онлайн</option>
+                <option value="mixed" {{ 'selected' if event_format == 'mixed' else '' }}>Смешанное</option>
+            </select>
+
+            <!-- НОВЫЕ ПОЛЯ: Календарь -->
+            <input type="date" name="date_from" value="{{ date_from }}" title="С какой даты">
+            <input type="date" name="date_to" value="{{ date_to }}" title="По какую дату">
+
+            <button type="submit" class="btn" style="width: auto;">Найти</button>
+            <a href="/" class="btn btn-secondary">Сбросить</a>
+        </form>
+    </div>
+
     <div class="events-grid">
         {% for event in events %}
             <div class="card">
                 <h3>{{ event.title }}</h3>
+
+                <!-- ВЫВОД ДАТЫ: Берем первые 10 символов из даты формата 2023-08-20T10:00:00 -->
+                <p><strong>Дата начала:</strong>
+                    {% if event.periods and event.periods|length > 0 %}
+                        <span style="color: #2980b9; font-weight: bold;">{{ event.periods[0].lower[:10] }}</span>
+                    {% else %}
+                        Не указана
+                    {% endif %}
+                </p>
+
                 <p><strong>Формат:</strong> {{ event.eventFormat.name if event.eventFormat else 'Не указан' }}</p>
                 <p><strong>Место:</strong> {{ event.location if event.location else 'Онлайн/Не указано' }}</p>
-                <button class="btn" onclick="alert('В MVP записываемся мысленно :) Запись даст +50 баллов!')">Участвовать (+50 XP)</button>
+
+                {% if current_user.is_authenticated %}
+                    <form action="/participate" method="POST" style="margin-top: 15px;">
+                        <input type="hidden" name="event_id" value="{{ event.id }}">
+                        <input type="hidden" name="event_title" value="{{ event.title }}">
+                        <button type="submit" class="btn">Участвовать (+50 XP)</button>
+                    </form>
+                {% else %}
+                    <p style="margin-top: 15px; color: #e74c3c; font-size: 0.9em;">Войдите, чтобы получать баллы за участие!</p>
+                {% endif %}
             </div>
         {% else %}
-            <p>К сожалению, мероприятия не найдены.</p>
+            <div style="grid-column: 1 / -1; text-align: center; padding: 40px;">
+                <h3>Ничего не найдено 😔</h3>
+                <p>Попробуй изменить параметры поиска</p>
+            </div>
         {% endfor %}
     </div>
+
+    {% if total_pages > 1 %}
+    <div class="pagination">
+        {% if current_page > 1 %}
+            <a href="/?page={{ current_page - 1 }}&search={{ search_query }}&format={{ event_format }}&date_from={{ date_from }}&date_to={{ date_to }}" class="btn-page">❮ Назад</a>
+        {% endif %}
+
+        <span class="page-info">Страница {{ current_page }} из {{ total_pages }}</span>
+
+        {% if current_page < total_pages %}
+            <a href="/?page={{ current_page + 1 }}&search={{ search_query }}&format={{ event_format }}&date_from={{ date_from }}&date_to={{ date_to }}" class="btn-page">Вперед ❯</a>
+        {% endif %}
+    </div>
+    {% endif %}
 {% endblock %}

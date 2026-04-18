@@ -1,0 +1,12 @@
+{% extends 'base.html' %}
+{% block content %}
+    <div style="max-width: 400px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px;">
+        <h2>Регистрация исследователя</h2>
+        <form method="POST">
+            <p><input type="text" name="username" placeholder="Логин (например: ksusha_science)" required style="width: 100%; padding: 10px;"></p>
+            <p><input type="text" name="name" placeholder="Твое Имя" required style="width: 100%; padding: 10px;"></p>
+            <p><input type="password" name="password" placeholder="Пароль" required style="width: 100%; padding: 10px;"></p>
+            <button type="submit" class="btn">Зарегистрироваться</button>
+        </form>
+    </div>
+{% endblock %}

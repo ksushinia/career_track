@@ -10,10 +10,31 @@
         <div class="logo">ScienceTrack</div>
         <ul class="nav-links">
             <li><a href="/">Мероприятия</a></li>
-            <li><a href="/profile">Мой профиль</a></li>
+            <li><a href="/vacancies">Вакансии</a></li>
+
+            <!-- Проверяем, залогинен ли пользователь -->
+            {% if current_user.is_authenticated %}
+                <li><a href="/profile">Профиль ({{ current_user.name }})</a></li>
+                <li><a href="/logout">Выйти</a></li>
+            {% else %}
+                <li><a href="/login">Вход</a></li>
+                <li><a href="/register">Регистрация</a></li>
+            {% endif %}
         </ul>
     </nav>
+
     <div class="container">
+        <!-- Блок для вывода ошибок (например, неверный пароль) -->
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                <div style="background: #ffcccc; color: #cc0000; padding: 10px; margin-bottom: 20px; border-radius: 5px;">
+                    {% for message in messages %}
+                        {{ message }}
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
         {% block content %}{% endblock %}
     </div>
 </body>
