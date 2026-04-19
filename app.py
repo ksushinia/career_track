@@ -50,19 +50,24 @@ def index():
 
     events, total_pages = get_events(page, search_query, event_format, date_from, date_to)
 
-    # Получаем ID избранных мероприятий текущего юзера
-    fav_event_ids =[]
+    fav_event_ids = []
     if current_user.is_authenticated:
         fav_event_ids =[f.event_id for f in FavoriteEvent.query.filter_by(user_id=current_user.id).all()]
 
-    today_date = datetime.now().strftime('%Y-%m-%d')  # Получаем сегодня в формате 2026-04-19
+    # ПОЛУЧАЕМ ТЕКУЩУЮ ДАТУ
+    today_date = datetime.now().strftime('%Y-%m-%d')
 
     return render_template(
         'index.html',
-        events=events, current_page=page, total_pages=total_pages,
-        search_query=search_query, event_format=event_format,
-        date_from=date_from, date_to=date_to,
-        fav_event_ids=fav_event_ids # Передаем в шаблон
+        events=events,
+        current_page=page,
+        total_pages=total_pages,
+        search_query=search_query,
+        event_format=event_format,
+        date_from=date_from,
+        date_to=date_to,
+        fav_event_ids=fav_event_ids,
+        today_date=today_date # <- ИМЕННО ЭТА СТРОЧКА ИСПРАВЛЯЕТ ОШИБКУ
     )
 
 @app.route('/register', methods=['GET', 'POST'])
