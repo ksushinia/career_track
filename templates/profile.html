@@ -1,145 +1,190 @@
 {% extends 'base.html' %}
-
 {% block content %}
+<div class="history-panel mb-30 border-primary text-center">
+    <h1 class="mt-0 mb-10">Профиль: {{ user.username }}</h1>
+    <p class="mb-0 text-dark" style="font-size: 1.1em;">Академический статус: <strong class="text-primary">{{ user_status }}</strong></p>
+</div>
 
-    <div class="profile-header" style="margin-bottom: 20px;">
-        <h1>Профиль: {{ user.name }}</h1>
-        <p class="status">Академический статус: <strong style="color: #2c3e50; font-size: 1.2em;">{{ user_status }}</strong></p>
-    </div>
-
-    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; align-items: start;">
-
-        <!-- ЛЕВАЯ КОЛОНКА -->
-        <div>
-            <!-- Прогресс бар -->
-            <div class="gamification-panel">
-                <h2>Уровень {{ level }} (Всего: {{ user.points }} XP)</h2>
-                <div class="progress-bar-bg">
-                    <div class="progress-bar-fill" style="width: {{ progress_percent }}%;"></div>
-                </div>
-                <p><small>Собрано {{ progress }} XP из {{ xp_per_level }} до следующего уровня</small></p>
+<div class="grid-2-col">
+    <!-- ЛЕВАЯ КОЛОНКА -->
+    <div class="flex-col">
+        <div class="gamification-panel">
+            <h2 class="mt-0">Уровень {{ level }}</h2>
+            <p class="text-muted text-dark mb-10 font-weight-bold">Всего: {{ user.points }} XP</p>
+            <div class="progress-bar-bg">
+                <div class="progress-bar-fill" style="width: {{ progress_percent }}%;"></div>
             </div>
-
-            <!-- Радар компетенций -->
-            <div class="history-panel" style="margin-top: 20px; text-align: center;">
-                <h3>Мои компетенции</h3>
-                <canvas id="radarChart" width="400" height="400"></canvas>
-                <p style="font-size: 0.8em; color: #7f8c8d; margin-top: 10px;">(Строится только по подтвержденным мероприятиям)</p>
-            </div>
+            <p class="text-muted mb-0"><small>Собрано {{ progress }} XP из {{ xp_per_level }} до следующего уровня</small></p>
         </div>
 
-        <!-- ПРАВАЯ КОЛОНКА -->
-        <div>
-            <!-- Ожидают подтверждения -->
-            <div class="history-panel" style="border-left: 4px solid #f39c12;">
-                <h3>⏳ Ожидают подтверждения</h3>
-                <p style="font-size: 0.9em; color: #7f8c8d;">Прикрепите подтверждающий документ (сертификат, диплом, фото бейджа), чтобы получить XP.</p>
+        <div class="history-panel text-center">
+            <h3 class="mt-0">Мои компетенции</h3>
+            <div class="radar-container">
+                <canvas id="radarChart"></canvas>
+            </div>
+            <p class="text-muted mt-10 mb-0" style="font-size: 0.85em;">(Строится по подтвержденным мероприятиям)</p>
+        </div>
+    </div>
 
-                {% if pending_events %}
-                    <ul style="list-style: none; padding: 0;">
-                        {% for p in pending_events %}
-                            <li style="background: #f9f9f9; padding: 15px; border-radius: 5px; margin-bottom: 10px;">
-                                <strong>{{ p.event_title }}</strong><br>
-                                <small style="color: #3498db;">[{{ p.category }}]</small>
+    <!-- ПРАВАЯ КОЛОНКА -->
+    <div class="flex-col">
+        <div class="history-panel border-warning">
+            <h3 class="mt-0">⏳ Ожидают подтверждения</h3>
+            <p class="text-muted mb-20">Прикрепите подтверждающий документ, чтобы получить XP.</p>
 
-                                <!-- ВАЖНО: enctype="multipart/form-data" для отправки файлов -->
-                                <form action="/claim_reward" method="POST" enctype="multipart/form-data" style="margin-top: 10px; display: flex; flex-direction: column; gap: 10px;">
+            {% if pending_events %}
+                <ul class="list-unstyled">
+                    {% for p in pending_events %}
+                        <li class="list-item flex-col" style="align-items: stretch;">
+                            <div class="flex-between w-100 mb-10">
+                                <div>
+                                    <strong style="display: block;">{{ p.event_title }}</strong>
+                                    <span class="badge badge-blue mt-10">{{ p.category }}</span>
+                                </div>
+                                <form action="/cancel_participation" method="POST" style="margin: 0;">
                                     <input type="hidden" name="participation_id" value="{{ p.id }}">
-
-                                    <select name="achievement" required style="padding: 8px; border-radius: 4px; border: 1px solid #ccc;">
-                                        <option value="" disabled selected>Какое место вы заняли?</option>
-                                        {% for key, info in achievements_dict.items() %}
-                                            <option value="{{ key }}">{{ info.name }} (+{{ info.xp }} XP)</option>
-                                        {% endfor %}
-                                    </select>
-
-                                    <!-- ПОЛЕ ЗАГРУЗКИ ФАЙЛА -->
-                                    <div style="display: flex; gap: 10px; align-items: center;">
-                                        <input type="file" name="certificate" accept=".pdf,.jpg,.jpeg,.png" required style="flex: 1; font-size: 0.9em;">
-                                        <button type="submit" class="btn" style="background: #f39c12; width: auto; padding: 8px 15px;">Отправить</button>
-                                    </div>
+                                    <button type="submit" class="btn btn-danger" style="padding: 4px 10px; font-size: 0.8em;" title="Отменить заявку">Отменить</button>
                                 </form>
-                            </li>
-                        {% endfor %}
-                    </ul>
-                {% else %}
-                    <p style="color: #7f8c8d;">У вас нет незавершенных мероприятий.</p>
-                {% endif %}
-            </div>
+                            </div>
+                            <form action="/claim_reward" method="POST" enctype="multipart/form-data" class="flex-col w-100 pt-20" style="border-top: 1px solid var(--light-gray);">
+                                <input type="hidden" name="participation_id" value="{{ p.id }}">
+                                <select name="achievement" required class="form-control" style="padding: 8px;">
+                                    <option value="" disabled selected>Какое место вы заняли?</option>
+                                    {% for key, info in achievements_dict.items() %}
+                                        <option value="{{ key }}">{{ info.name }} (+{{ info.xp }} XP)</option>
+                                    {% endfor %}
+                                </select>
+                                <div class="flex-row">
+                                    <input type="file" name="certificate" accept=".pdf,.jpg,.jpeg,.png" required class="form-control" style="flex: 1; padding: 6px;">
+                                    <button type="submit" class="btn btn-success" style="padding: 8px 15px;">Отправить</button>
+                                </div>
+                            </form>
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p class="text-muted mb-0">У вас нет незавершенных мероприятий.</p>
+            {% endif %}
+        </div>
 
-            <!-- Завершенные достижения -->
-            <div class="history-panel" style="margin-top: 20px; border-left: 4px solid #2ecc71;">
-                <h3>🏆 Подтвержденные достижения</h3>
-                {% if completed_events %}
-                    <ul style="list-style: none; padding: 0;">
-                        {% for p in completed_events %}
-                            <li style="margin-bottom: 10px; background: #f4f7f6; padding: 10px; border-radius: 5px;">
-                                <strong>{{ p.event_title }}</strong> <br>
-                                <span style="display: inline-block; background: #2ecc71; color: white; padding: 2px 8px; border-radius: 10px; font-size: 0.8em; margin-top: 5px;">
-                                    {{ p.achievement }} (+{{ p.earned_points }} XP)
-                                </span>
-                                <!-- ССЫЛКА НА ФАЙЛ -->
+        <div class="history-panel border-success">
+            <h3 class="mt-0">🏆 Подтвержденные достижения</h3>
+            {% if completed_events %}
+                <ul class="list-unstyled">
+                    {% for p in completed_events %}
+                        <li class="list-item flex-col" style="align-items: flex-start;">
+                            <strong class="w-100">{{ p.event_title }}</strong>
+                            <div class="flex-between w-100 mt-10">
+                                <span class="badge badge-green mb-0">{{ p.achievement }} (+{{ p.earned_points }} XP)</span>
                                 {% if p.certificate_file %}
-                                    <a href="{{ url_for('static', filename='uploads/' ~ p.certificate_file) }}" target="_blank" style="margin-left: 10px; font-size: 0.85em; color: #3498db; text-decoration: none;">
-                                        📄 Посмотреть диплом
-                                    </a>
+                                    <a href="{{ url_for('static', filename='uploads/' ~ p.certificate_file) }}" target="_blank" class="link-primary" style="font-size: 0.85em;">📄 Смотреть диплом</a>
                                 {% endif %}
-                            </li>
-                        {% endfor %}
-                    </ul>
-                {% else %}
-                    <p style="color: #7f8c8d;">Пока нет достижений. Подтвердите участие выше!</p>
-                {% endif %}
-            </div>
-
-            <!-- Избранные вакансии (скрыл мероприятия для экономии места) -->
-            <div class="history-panel" style="margin-top: 20px;">
-                <h3>💼 Избранные вакансии</h3>
-                {% if user.favorite_vacancies %}
-                    <ul style="padding-left: 20px;">
-                        {% for fav in user.favorite_vacancies %}
-                            <li style="margin-bottom: 8px;">
-                                {{ fav.vacancy_title }}
-                                {% if fav.hh_url %}
-                                    <a href="{{ fav.hh_url }}" target="_blank" style="font-size: 0.8em; color: #2ecc71;">[Перейти]</a>
-                                {% endif %}
-                            </li>
-                        {% endfor %}
-                    </ul>
-                {% else %}
-                    <p style="color: #7f8c8d;">Нет сохраненных вакансий.</p>
-                {% endif %}
-            </div>
-
+                            </div>
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p class="text-muted mb-0">Пока нет достижений. Подтвердите участие выше!</p>
+            {% endif %}
         </div>
     </div>
+</div>
 
-    <!-- ПОДКЛЮЧАЕМ CHART.JS -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const ctx = document.getElementById('radarChart').getContext('2d');
-            const labels = JSON.parse('{{ radar_labels | safe }}');
-            const data = JSON.parse('{{ radar_data | safe }}');
+<h2 class="mt-30 mb-20 pb-10 text-dark" style="border-bottom: 2px solid var(--light-gray);">⭐ Мое Избранное</h2>
+<div class="grid-2-col mb-30">
+    <!-- Избранные мероприятия -->
+    <div class="history-panel border-primary">
+        <h3 class="mt-0">📅 Сохраненные мероприятия</h3>
+        {% if user.favorite_events %}
+            <ul class="list-unstyled">
+                {% for fav in user.favorite_events %}
+                    <li class="list-item flex-between">
+                        <a href="{{ url_for('event_detail', event_id=fav.event_id) }}" class="link-primary font-weight-bold" style="flex: 1;">{{ fav.event_title }}</a>
+                        <form action="/toggle_fav_event" method="POST" style="margin: 0;">
+                            <input type="hidden" name="event_id" value="{{ fav.event_id }}">
+                            <input type="hidden" name="event_title" value="{{ fav.event_title }}">
+                            <button type="submit" class="btn btn-danger" style="padding: 4px 10px; font-size: 0.85em;">Удалить</button>
+                        </form>
+                    </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p class="text-muted mb-0">Вы пока не сохранили ни одного мероприятия.</p>
+        {% endif %}
+    </div>
 
-            new Chart(ctx, {
-                type: 'radar',
-                data: {
-                    labels: labels,
-                    datasets:[{
-                        label: 'Подтверждено участий',
-                        data: data,
-                        backgroundColor: 'rgba(46, 204, 113, 0.4)',
-                        borderColor: 'rgba(39, 174, 96, 1)',
-                        pointBackgroundColor: 'rgba(39, 174, 96, 1)',
-                        borderWidth: 2
-                    }]
+    <!-- Избранные вакансии -->
+    <div class="history-panel border-warning">
+        <h3 class="mt-0">💼 Сохраненные вакансии</h3>
+        {% if user.favorite_vacancies %}
+            <ul class="list-unstyled">
+                {% for fav in user.favorite_vacancies %}
+                    <li class="list-item flex-col" style="align-items: flex-start; border-left: 4px solid {% if fav.hh_url %}var(--primary){% else %}var(--success){% endif %};">
+                        <strong class="w-100 mb-10">{{ fav.vacancy_title }}</strong>
+                        <div class="flex-row w-100">
+                            {% if fav.hh_url %}
+                                <a href="{{ fav.hh_url }}" target="_blank" class="btn btn-primary" style="flex: 1; padding: 5px 10px; font-size: 0.85em;">На HH.ru</a>
+                            {% else %}
+                                <a href="{{ url_for('vacancy_detail', vacancy_id=fav.vacancy_id) }}" class="btn btn-success" style="flex: 1; padding: 5px 10px; font-size: 0.85em;">Подробнее</a>
+                            {% endif %}
+                            <form action="/toggle_fav_vacancy" method="POST" style="margin: 0;">
+                                <input type="hidden" name="vacancy_id" value="{{ fav.vacancy_id }}">
+                                <input type="hidden" name="vacancy_title" value="{{ fav.vacancy_title }}">
+                                <button type="submit" class="btn btn-danger" style="padding: 5px 10px; font-size: 0.85em;">Удалить</button>
+                            </form>
+                        </div>
+                    </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p class="text-muted mb-0">Вы пока не сохранили ни одной вакансии.</p>
+        {% endif %}
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const ctx = document.getElementById('radarChart').getContext('2d');
+        const labels = JSON.parse('{{ radar_labels | safe }}');
+        const data = JSON.parse('{{ radar_data | safe }}');
+
+        new Chart(ctx, {
+            type: 'radar',
+            data: {
+                labels: labels,
+                datasets:[{
+                    label: 'Уровень компетенций',
+                    data: data,
+                    backgroundColor: 'rgba(167, 201, 87, 0.2)', // Прозрачный неон
+                    borderColor: '#A7C957',                    // Яркая неоновая линия
+                    pointBackgroundColor: '#A7C957',
+                    pointBorderColor: '#fff',
+                    pointHoverBackgroundColor: '#fff',
+                    pointHoverBorderColor: '#A7C957'
+                }]
+            },
+            options: {
+                scales: {
+                    r: {
+                        angleLines: { color: '#2D3630' },      // Цвет лучей
+                        grid: { color: '#2D3630' },            // Цвет паутинки
+                        pointLabels: {
+                            color: '#A3B1A5',                  // Цвет подписей (IT, Биомед...)
+                            font: { size: 12, family: 'Inter' }
+                        },
+                        ticks: {
+                            display: false,                    // Убираем цифры внутри (0, 1, 2)
+                            beginAtZero: true,
+                            stepSize: 1
+                        }
+                    }
                 },
-                options: {
-                    scales: { r: { beginAtZero: true, ticks: { stepSize: 1, precision: 0 } } },
-                    plugins: { legend: { display: false } }
+                plugins: {
+                    legend: { display: false }
                 }
-            });
+            }
         });
-    </script>
+    });
+</script>
 {% endblock %}

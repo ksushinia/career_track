@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+{% block content %}
+<!-- Главный баннер (Hero Section) -->
+<div class="text-center" style="padding: 80px 20px; border-bottom: 1px solid var(--border-color); margin-bottom: 40px;">
+    <h1 style="font-size: 3.5rem; color: var(--primary); margin-bottom: 20px; line-height: 1.2; text-shadow: 0 0 20px rgba(167, 201, 87, 0.3);">
+        Развивай научную карьеру<br>
+        <span style="color: var(--text-main);">вместе с ScienceTrack</span>
+    </h1>
+    <p style="font-size: 1.2rem; color: var(--text-muted); max-width: 700px; margin: 0 auto 40px auto;">
+        Геймифицированная платформа для молодых ученых, исследователей и tech-компаний. Участвуй в хакатонах, прокачивай радар компетенций и находи работу мечты.
+    </p>
+    <div class="flex-row" style="justify-content: center; gap: 20px;">
+        <a href="{{ url_for('register') }}" class="btn btn-success" style="padding: 15px 40px; font-size: 1.1rem; box-shadow: 0 0 15px rgba(56, 176, 0, 0.4);">🚀 Начать путь</a>
+        <a href="{{ url_for('events_page') }}" class="btn btn-outline" style="padding: 15px 40px; font-size: 1.1rem;">Смотреть мероприятия</a>
+    </div>
+</div>
+
+<!-- Блок с преимуществами (Как это работает) -->
+<div style="padding: 40px 0 80px 0;">
+    <h2 class="text-center mb-30" style="font-size: 2.5rem;">Как это работает?</h2>
+    
+    <div class="grid-2-col" style="grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 30px;">
+        <!-- Карточка 1 -->
+        <div class="card flex-col text-center" style="padding: 40px 20px; border-top: 4px solid var(--primary);">
+            <div style="font-size: 3.5rem; margin-bottom: 20px;">🎮</div>
+            <h3 style="font-size: 1.5rem;">Геймификация</h3>
+            <p class="text-muted" style="font-size: 1.05rem;">Получай XP за подтвержденное участие в воркшопах и конференциях. Повышай свой академический уровень и статус.</p>
+        </div>
+
+        <!-- Карточка 2 -->
+        <div class="card flex-col text-center" style="padding: 40px 20px; border-top: 4px solid var(--success);">
+            <div style="font-size: 3.5rem; margin-bottom: 20px;">📊</div>
+            <h3 style="font-size: 1.5rem;">Радар компетенций</h3>
+            <p class="text-muted" style="font-size: 1.05rem;">Твое портфолио формируется автоматически на основе твоих достижений. Лаборатории видят твои реальные навыки.</p>
+        </div>
+
+        <!-- Карточка 3 -->
+        <div class="card flex-col text-center" style="padding: 40px 20px; border-top: 4px solid var(--warning);">
+            <div style="font-size: 3.5rem; margin-bottom: 20px;">🤝</div>
+            <h3 style="font-size: 1.5rem;">Прямой мэтчинг</h3>
+            <p class="text-muted" style="font-size: 1.05rem;">Университеты и IT-компании ищут таланты прямо здесь. Откликайся на стажировки и закрытые вакансии партнеров.</p>
+        </div>
+    </div>
+</div>
+{% endblock %}

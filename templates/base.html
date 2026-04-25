@@ -2,14 +2,26 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>Карьерный трек</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ScienceTrack | Карьерный трек</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- ВЫПАДАЮЩИЕ СПИСКИ (Choices.js) -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css" />
+    <script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
+
+    <!-- КРАСИВЫЙ КАЛЕНДАРЬ (Flatpickr) -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/themes/dark.css">
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://npmcdn.com/flatpickr/dist/l10n/ru.js"></script> <!-- Русский язык -->
+
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
     <nav class="navbar">
-        <div class="logo">ScienceTrack</div>
+        <div class="logo"><a href="/" style="color: white; text-decoration: none;">ScienceTrack</a></div>
         <ul class="nav-links">
-            <li><a href="/">Мероприятия</a></li>
+            <li><a href="{{ url_for('events_page') }}">Мероприятия</a></li>
             {% if current_user.is_authenticated %}
                 {% if current_user.role == 'company' %}
                     <li><a href="{{ url_for('search_talents') }}">Поиск талантов</a></li>
@@ -39,5 +51,29 @@
 
         {% block content %}{% endblock %}
     </div>
+
+    <!-- АКТИВАЦИЯ СКРИПТОВ ДИЗАЙНА -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // 1. Активация кастомных выпадающих списков
+            const selects = document.querySelectorAll('select');
+            selects.forEach(select => {
+                new Choices(select, {
+                    searchEnabled: false,
+                    itemSelectText: '',
+                    shouldSort: false,
+                    position: 'bottom'
+                });
+            });
+
+            // 2. Активация красивых зеленых календарей
+            flatpickr('input[type="date"]', {
+                locale: "ru",          // Русский язык
+                dateFormat: "Y-m-d",   // Формат, который понимает сервер (важно!)
+                disableMobile: true,   // Использовать красивый стиль даже на телефонах
+                allowInput: true       // Позволяет стирать дату, если нужно
+            });
+        });
+    </script>
 </body>
 </html>

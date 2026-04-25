@@ -1,97 +1,131 @@
 {% extends 'base.html' %}
-
 {% block content %}
-    <h1>Актуальные мероприятия</h1>
-    <p>Участвуй и получай баллы для повышения уровня!</p>
-    
-    <div class="filters-panel">
-        <form method="GET" action="/">
-            <input type="text" name="search" placeholder="Поиск по названию..." value="{{ search_query }}">
+<div class="mb-30 text-center">
+    <h1 style="font-size: 2.5rem; color: var(--dark); margin-bottom: 10px;">Наука в движении</h1>
+    <p class="text-muted" style="font-size: 1.1rem; max-width: 600px; margin: 0 auto;">Конференции, хакатоны и воркшопы. Исследователям – опыт, компаниям – поиск талантов.</p>
+</div>
 
-            <select name="format">
+<div class="filters-panel">
+    <form method="GET" action="{{ url_for('events_page') }}" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; align-items: end;">
+        <div class="form-group mb-0">
+            <label class="form-label">Поиск</label>
+            <input type="text" name="search" placeholder="Название..." value="{{ search_query }}" class="form-control">
+        </div>
+        <div class="form-group mb-0">
+            <label class="form-label">Формат</label>
+            <select name="format" class="form-control">
                 <option value="">Все форматы</option>
-                <option value="offline" {{ 'selected' if event_format == 'offline' else '' }}>Очное</option>
-                <option value="online" {{ 'selected' if event_format == 'online' else '' }}>Онлайн</option>
-                <option value="mixed" {{ 'selected' if event_format == 'mixed' else '' }}>Смешанное</option>
+                <option value="offline" {% if event_format == 'offline' %}selected{% endif %}>Очное</option>
+                <option value="online" {% if event_format == 'online' %}selected{% endif %}>Онлайн</option>
+                <option value="mixed" {% if event_format == 'mixed' %}selected{% endif %}>Смешанное</option>
             </select>
+        </div>
+        <div class="form-group mb-0">
+            <label class="form-label">Направление</label>
+            <select name="category" class="form-control">
+                <option value="">Все направления</option>
+                <option value="IT и Data Science" {% if category == 'IT и Data Science' %}selected{% endif %}>IT и Data Science</option>
+                <option value="Биомед" {% if category == 'Биомед' %}selected{% endif %}>Биомед</option>
+                <option value="Физмат и Инженерия" {% if category == 'Физмат и Инженерия' %}selected{% endif %}>Физмат и Инженерия</option>
+                <option value="Экономика" {% if category == 'Экономика' %}selected{% endif %}>Экономика</option>
+                <option value="Гуманитарные и общие" {% if category == 'Гуманитарные и общие' %}selected{% endif %}>Гуманитарные и общие</option>
+            </select>
+        </div>
+        <div class="form-group mb-0">
+            <label class="form-label">Дата С</label>
+            <input type="date" name="date_from" value="{{ date_from }}" class="form-control">
+        </div>
+        <div class="form-group mb-0">
+            <label class="form-label">Дата По</label>
+            <input type="date" name="date_to" value="{{ date_to }}" class="form-control">
+        </div>
+        <div class="flex-row form-group mb-0" style="grid-column: span 2;">
+            <button type="submit" class="btn btn-primary" style="flex: 2;">Найти мероприятия</button>
+            <a href="{{ url_for('events_page') }}" class="btn btn-secondary" style="flex: 1;">Сбросить</a>
+        </div>
+    </form>
+</div>
 
-            <!-- НОВЫЕ ПОЛЯ: Календарь -->
-            <input type="date" name="date_from" value="{{ date_from }}" title="С какой даты">
-            <input type="date" name="date_to" value="{{ date_to }}" title="По какую дату">
-
-            <button type="submit" class="btn" style="width: auto;">Найти</button>
-            <a href="/" class="btn btn-secondary">Сбросить</a>
-        </form>
-    </div>
-
-    <div class="events-grid">
-        {% for event in events %}
-            <div class="card">
-                <h3>{{ event.title }}</h3>
-
-                <!-- ВЫВОД ДАТЫ: Берем первые 10 символов из даты формата 2023-08-20T10:00:00 -->
-                <p><strong>Дата начала:</strong>
-                    {% if event.periods and event.periods|length > 0 %}
-                        <span style="color: #2980b9; font-weight: bold;">{{ event.periods[0].lower[:10] }}</span>
-                    {% else %}
-                        Не указана
-                    {% endif %}
-                </p>
-
-                <p><strong>Формат:</strong> {{ event.eventFormat.name if event.eventFormat else 'Не указан' }}</p>
-                <p><strong>Место:</strong> {{ event.location if event.location else 'Онлайн/Не указано' }}</p>
-
+{% if internal_events %}
+    <h2 class="mb-20" style="color: var(--success-dark); border-left: 5px solid var(--success); padding-left: 15px;">События от партнеров</h2>
+    <div class="events-grid mb-30">
+        {% for ie in internal_events %}
+            <div class="card flex-col" style="border: 2px solid var(--success);">
+                <div>
+                    <span class="badge badge-green mb-10">Партнер: {{ ie.company.username }}</span>
+                    <h3 class="mt-0 mb-10"><a href="{{ url_for('internal_event_detail', event_id=ie.id) }}" class="link-primary">{{ ie.title }}</a></h3>
+                    <p class="mb-0 text-muted"><strong>Дата:</strong> <span class="text-dark">{{ ie.event_date.strftime('%d.%m.%Y') }}</span></p>
+                    <p class="mb-0 text-muted"><strong>Формат:</strong> {% if ie.event_format == 'offline' %}Очное{% elif ie.event_format == 'online' %}Онлайн{% else %}Смешанное{% endif %}</p>
+                    <p class="mb-0 text-muted"><strong>Место:</strong> {{ ie.location if ie.location else 'Не указано' }}</p>
+                </div>
                 {% if current_user.is_authenticated %}
-                    <div style="display: flex; gap: 10px; margin-top: 15px;">
-
-                        <!-- ЛОГИКА ДАТ: Определяем, прошло ли мероприятие -->
-                        {% set event_date = event.periods[0].upper[:10] if event.periods and event.periods|length > 0 else '2099-12-31' %}
-
-                        <form action="/participate" method="POST" style="flex: 1;">
-                            <input type="hidden" name="event_id" value="{{ event.id }}">
-                            <input type="hidden" name="event_title" value="{{ event.title }}">
-
-                            {% if event_date >= today_date %}
-                                <!-- ПРЕДСТОЯЩЕЕ -->
-                                <button type="submit" class="btn" style="width: 100%; box-sizing: border-box;">Подать заявку</button>
-                            {% else %}
-                                <!-- ПРОШЕДШЕЕ -->
-                                <button type="submit" class="btn" style="width: 100%; box-sizing: border-box; background: #8e44ad;" title="Мероприятие завершено. Вы можете добавить его в портфолио, загрузив диплом.">
-                                    Внести в портфолио
-                                </button>
-                            {% endif %}
-                        </form>
-
-                        <!-- Кнопка Избранного остается как была... -->
-                        <form action="/toggle_fav_event" method="POST">
-                            <input type="hidden" name="event_id" value="{{ event.id }}">
-                            <input type="hidden" name="event_title" value="{{ event.title }}">
-                            <button type="submit" class="btn" style="background: {{ '#e74c3c' if event.id in fav_event_ids else '#ecf0f1' }}; color: {{ '#fff' if event.id in fav_event_ids else '#333' }}; font-size: 1.2em; padding: 10px; width: 45px;" title="Добавить в избранное">❤</button>
+                    <div class="flex-row mt-10">
+                        <a href="{{ url_for('internal_event_detail', event_id=ie.id) }}" class="btn btn-success" style="flex: 1;">Подробнее</a>
+                        <form action="/toggle_fav_event" method="POST" style="margin: 0;">
+                            <input type="hidden" name="event_id" value="{{ ie.id }}">
+                            <input type="hidden" name="event_title" value="{{ ie.title }}">
+                            <button type="submit" class="btn-heart {% if ie.id in fav_event_ids %}active{% endif %}" title="В избранное">❤</button>
                         </form>
                     </div>
-                {% else %}
-                    <p style="margin-top: 15px; color: #e74c3c; font-size: 0.9em;">Войдите, чтобы получать баллы за участие!</p>
                 {% endif %}
-            </div>
-        {% else %}
-            <div style="grid-column: 1 / -1; text-align: center; padding: 40px;">
-                <h3>Ничего не найдено 😔</h3>
-                <p>Попробуй изменить параметры поиска</p>
             </div>
         {% endfor %}
     </div>
+    <h2 class="mb-20" style="color: var(--dark); border-left: 5px solid var(--primary); padding-left: 15px;">Все научные мероприятия</h2>
+{% endif %}
 
-    {% if total_pages > 1 %}
-    <div class="pagination">
-        {% if current_page > 1 %}
-            <a href="/?page={{ current_page - 1 }}&search={{ search_query }}&format={{ event_format }}&date_from={{ date_from }}&date_to={{ date_to }}" class="btn-page">❮ Назад</a>
-        {% endif %}
+<div class="events-grid">
+    {% for event in events %}
+        <div class="card flex-col border-primary justify-between">
+            <div>
+                <h3 class="mt-0 mb-10"><a href="{{ url_for('event_detail', event_id=event.id) }}" class="link-primary">{{ event.title }}</a></h3>
+                <p class="mb-0 text-muted"><strong>Дата:</strong> <span class="text-dark">{% if event.periods and event.periods|length > 0 %}{{ event.periods[0].lower[:10] }}{% else %}Не указана{% endif %}</span></p>
+                <p class="mb-0 text-muted"><strong>Формат:</strong> {{ event.eventFormat.name if event.eventFormat else 'Не указан' }}</p>
+                <p class="mb-0 text-muted"><strong>Место:</strong> {{ event.location if event.location else 'Онлайн / Не указано' }}</p>
+            </div>
+            {% if current_user.is_authenticated %}
+                <div class="flex-row mt-20">
+                    {% set event_date = event.periods[0].upper[:10] if event.periods and event.periods|length > 0 else '2099-12-31' %}
+                    {% if current_user.role == 'user' %}
+                        <form action="/participate" method="POST" style="flex: 1; margin: 0;">
+                            <input type="hidden" name="event_id" value="{{ event.id }}">
+                            <input type="hidden" name="event_title" value="{{ event.title }}">
+                            {% if event_date >= today_date %}
+                                <button type="submit" class="btn btn-primary w-100">Подать заявку</button>
+                            {% else %}
+                                <button type="submit" class="btn w-100" style="background: #8e44ad;" title="Мероприятие завершено.">В портфолио</button>
+                            {% endif %}
+                        </form>
+                    {% endif %}
+                    <form action="/toggle_fav_event" method="POST" style="margin: 0; {% if current_user.role == 'company' %}flex: 1;{% endif %}">
+                        <input type="hidden" name="event_id" value="{{ event.id }}">
+                        <input type="hidden" name="event_title" value="{{ event.title }}">
+                        {% if current_user.role == 'company' %}
+                            <button type="submit" class="btn-heart-text w-100 {% if event.id in fav_event_ids %}active{% endif %}">❤ В избранное</button>
+                        {% else %}
+                            <button type="submit" class="btn-heart {% if event.id in fav_event_ids %}active{% endif %}" title="В избранное">❤</button>
+                        {% endif %}
+                    </form>
+                </div>
+            {% endif %}
+        </div>
+    {% else %}
+        <div style="grid-column: 1 / -1; text-align: center;" class="card p-20">
+            <h3>Ничего не найдено 😔</h3>
+            <p class="text-muted">Попробуй изменить параметры поиска</p>
+        </div>
+    {% endfor %}
+</div>
 
-        <span class="page-info">Страница {{ current_page }} из {{ total_pages }}</span>
-
-        {% if current_page < total_pages %}
-            <a href="/?page={{ current_page + 1 }}&search={{ search_query }}&format={{ event_format }}&date_from={{ date_from }}&date_to={{ date_to }}" class="btn-page">Вперед ❯</a>
-        {% endif %}
-    </div>
+{% if total_pages > 1 %}
+<div class="pagination">
+    {% if current_page > 1 %}
+        <a href="/events?page={{ current_page - 1 }}&search={{ search_query }}&format={{ event_format }}&date_from={{ date_from }}&date_to={{ date_to }}" class="btn-page">❮ Назад</a>
     {% endif %}
+    <span class="page-info">Страница {{ current_page }} из {{ total_pages }}</span>
+    {% if current_page < total_pages %}
+        <a href="/events?page={{ current_page + 1 }}&search={{ search_query }}&format={{ event_format }}&date_from={{ date_from }}&date_to={{ date_to }}" class="btn-page">Вперед ❯</a>
+    {% endif %}
+</div>
+{% endif %}
 {% endblock %}

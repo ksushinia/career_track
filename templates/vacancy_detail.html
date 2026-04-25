@@ -1,33 +1,49 @@
 {% extends 'base.html' %}
 {% block content %}
-<a href="{{ url_for('company_vacancies') }}" class="text-muted">❮ Назад к вакансиям</a>
+<a href="{{ url_for('vacancies') }}" class="link-primary mb-20" style="display: inline-block;">❮ Назад к списку</a>
 
-<div class="history-panel border-warning" style="margin-top: 20px;">
-    <span class="badge badge-blue">{{ vacancy.category }}</span>
-    <h1 style="margin-top: 10px;">{{ vacancy.title }}</h1>
-    
-    <div class="flex-row" style="margin-bottom: 20px;">
-        <strong class="text-dark">
-            {% if vacancy.salary_from and vacancy.salary_to %}
-                {{ vacancy.salary_from }} - {{ vacancy.salary_to }} ₽
-            {% elif vacancy.salary_from %}
-                от {{ vacancy.salary_from }} ₽
-            {% else %}
-                Зарплата по результатам собеседования
-            {% endif %}
-        </strong>
+<div class="history-panel border-warning">
+    <div class="flex-between mb-20">
+        <div>
+            <span class="badge badge-blue mb-10">{{ vacancy.category }}</span>
+            <h1 class="mt-0 mb-10">{{ vacancy.title }}</h1>
+            <p class="text-dark mb-0">Компания: <strong>{{ vacancy.company.username }}</strong></p>
+        </div>
+
+        {% if current_user.is_authenticated and current_user.role == 'user' %}
+            <form action="/toggle_fav_vacancy" method="POST" style="margin: 0;">
+                <input type="hidden" name="vacancy_id" value="{{ vacancy.id }}">
+                <input type="hidden" name="vacancy_title" value="{{ vacancy.title }}">
+                <button type="submit" class="btn btn-heart-text {% if vacancy.id in fav_vacancy_ids %}active{% endif %}">
+                    ❤ {% if vacancy.id in fav_vacancy_ids %}В избранном{% else %}В избранное{% endif %}
+                </button>
+            </form>
+        {% endif %}
     </div>
 
-    <div class="flex-row text-muted" style="margin-bottom: 20px; gap: 20px;">
-        <span><strong>Опыт:</strong> {{ vacancy.experience }}</span>
-        <span><strong>График:</strong> {{ vacancy.schedule }}</span>
+    <hr style="border: 0; border-top: 1px solid var(--light-gray); margin: 20px 0;">
+
+    <div class="flex-row text-muted mb-30" style="gap: 30px;">
+        <span><span class="data-label">Зарплата</span><span class="data-value">{{ vacancy.salary_from if vacancy.salary_from else '---' }} ₽</span></span>
+        <span><span class="data-label">Опыт</span><span class="data-value">{{ vacancy.experience }}</span></span>
+        <span><span class="data-label">График</span><span class="data-value">{{ vacancy.schedule }}</span></span>
     </div>
 
-    <h3>Описание</h3>
-    <p style="white-space: pre-wrap;">{{ vacancy.description }}</p>
+    <h3 class="mb-10">Описание вакансии</h3>
+    <p style="white-space: pre-wrap; line-height: 1.6; margin-bottom: 30px;">{{ vacancy.description }}</p>
 
-    <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #ecf0f1;">
-        <p class="text-muted">Опубликовано: {{ vacancy.created_at.strftime('%Y-%m-%d') }}</p>
+    {% if current_user.is_authenticated and current_user.role == 'user' %}
+        <div class="text-center p-20 mt-30" style="background: #f0fdf4; border-radius: var(--border-radius); border: 1px solid var(--success);">
+            <h3 class="mt-0 mb-10">Понравилась вакансия?</h3>
+            <p class="mb-20 text-dark">Свяжитесь с представителем компании напрямую через email:</p>
+            <a href="mailto:{{ vacancy.company.mail }}?subject=Отклик на вакансию {{ vacancy.title }}" class="btn btn-success" style="padding: 12px 30px; font-size: 1.1em;">
+                📧 Откликнуться (Написать письмо)
+            </a>
+        </div>
+    {% endif %}
+
+    <div class="mt-30 pt-20" style="border-top: 1px solid var(--light-gray);">
+        <p class="text-muted mb-0">Вакансия опубликована: {{ vacancy.created_at.strftime('%d.%m.%Y') }}</p>
     </div>
 </div>
 {% endblock %}

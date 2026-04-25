@@ -1,110 +1,83 @@
 {% extends 'base.html' %}
-
 {% block content %}
-    <h1>Вакансии и стажировки</h1>
-    <p>Найди лабораторию или компанию для старта научной карьеры.</p>
-    
-    <div class="filters-panel">
-        <form method="GET" action="/vacancies">
-            <input type="text" name="search" placeholder="Поиск по названию или должности..." value="{{ search_query }}">
-            
-            <input type="number" name="salary_from" placeholder="Зарплата от (₽)" value="{{ salary_from }}">
+<div class="flex-between mb-20">
+    <h1 class="mb-0">Вакансии партнеров</h1>
+    <a href="{{ url_for('vacancies_external') }}" class="btn btn-outline">Внешние вакансии (ПНВШ) ❯</a>
+</div>
 
-            <button type="submit" class="btn" style="width: auto;">Найти</button>
-            <a href="/vacancies" class="btn btn-secondary">Сбросить</a>
-        </form>
-    </div>
+<div class="filters-panel">
+    <form method="GET" action="/vacancies" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; align-items: end;">
+        <div class="form-group mb-0">
+            <label class="form-label">Поиск</label>
+            <input type="text" name="search" placeholder="Должность..." value="{{ search_query or '' }}" class="form-control">
+        </div>
+        <div class="form-group mb-0">
+            <label class="form-label">Зарплата от</label>
+            <input type="number" name="salary_min" placeholder="₽" value="{{ salary_min or '' }}" class="form-control">
+        </div>
+        <div class="form-group mb-0">
+            <label class="form-label">Направление</label>
+            <select name="category" class="form-control">
+                <option value="">Все направления</option>
+                <option value="IT и Data Science" {% if category == 'IT и Data Science' %}selected{% endif %}>IT и Data Science</option>
+                <option value="Биомед" {% if category == 'Биомед' %}selected{% endif %}>Биомед</option>
+                <option value="Физмат и Инженерия" {% if category == 'Физмат и Инженерия' %}selected{% endif %}>Физмат и Инженерия</option>
+                <option value="Экономика" {% if category == 'Экономика' %}selected{% endif %}>Экономика</option>
+                <option value="Гуманитарные и общие" {% if category == 'Гуманитарные и общие' %}selected{% endif %}>Гуманитарные и общие</option>
+            </select>
+        </div>
+        <div class="form-group mb-0">
+            <label class="form-label">Опыт</label>
+            <select name="experience" class="form-control">
+                <option value="">Любой опыт</option>
+                <option value="Без опыта" {% if experience == 'Без опыта' %}selected{% endif %}>Без опыта</option>
+                <option value="От 1 года до 3 лет" {% if experience == 'От 1 года до 3 лет' %}selected{% endif %}>1-3 года</option>
+                <option value="От 3 до 6 лет" {% if experience == 'От 3 до 6 лет' %}selected{% endif %}>3-6 лет</option>
+            </select>
+        </div>
+        <div class="flex-row form-group mb-0">
+            <button type="submit" class="btn btn-primary" style="flex: 2;">Найти</button>
+            <a href="/vacancies" class="btn btn-secondary" style="flex: 1;">Сброс</a>
+        </div>
+    </form>
+</div>
 
-    <div class="events-grid">
-        {% for vacancy in vacancies %}
-            <div class="card" style="display: flex; flex-direction: column; justify-content: space-between;">
-                <div>
-                    <!-- Логотип организации (если есть) и название -->
-                    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 15px;">
-                        <!-- Добавили проверку на .url и onerror, чтобы скрыть сломанные картинки -->
-                        {% if vacancy.organization and vacancy.organization.logo and vacancy.organization.logo.url %}
-                            <img src="{{ vacancy.organization.logo.url }}" alt="Логотип"
-                                 style="width: 40px; height: 40px; object-fit: contain; border-radius: 4px;"
-                                 onerror="this.style.display='none'">
-                        {% endif %}
-                        <!-- Немного поправили отступы заголовка -->
-                        <h3 style="margin: 0; font-size: 1.1em; line-height: 1.2;">{{ vacancy.name }}</h3>
-                    </div>
-
-                    <p style="color: #7f8c8d; margin-top: 0;">
-                        {{ vacancy.organization.name if vacancy.organization else 'Организация не указана' }}
-                    </p>
-
-                    <!-- Зарплата -->
-                    <p><strong>Зарплата:</strong>
-                        {% if vacancy.salaryFrom and vacancy.salaryUpTo %}
-                            {{ vacancy.salaryFrom }} - {{ vacancy.salaryUpTo }} ₽
-                        {% elif vacancy.salaryFrom %}
-                            от {{ vacancy.salaryFrom }} ₽
-                        {% elif vacancy.salaryUpTo %}
-                            до {{ vacancy.salaryUpTo }} ₽
-                        {% else %}
-                            Не указана
-                        {% endif %}
-                    </p>
-
-                    <!-- Требования -->
-                    <p><strong>Опыт:</strong> {{ vacancy.experience.name if vacancy.experience else 'Не указан' }}</p>
-                    <p><strong>График:</strong>
-                        {% if vacancy.schedule and vacancy.schedule|length > 0 %}
-                            {{ vacancy.schedule[0].name }}
-                        {% else %}
-                            Не указан
-                        {% endif %}
-                    </p>
-                </div>
-
-                <!-- Кнопка отклика -->
-                <div style="margin-top: 15px; display: flex; gap: 10px;">
-                    {% if vacancy.hhUrl %}
-                        <a href="{{ vacancy.hhUrl }}" target="_blank" class="btn"
-                           style="text-align: center; text-decoration: none; background: #27ae60; box-sizing: border-box; flex: 1;">
-                           Смотреть на HH.ru
-                        </a>
+<div class="events-grid">
+    {% for v in vacancies %}
+        <div class="card border-success flex-col justify-between">
+            <div>
+                <span class="badge badge-green mb-10">{{ v.category }}</span>
+                <h3 class="mt-0 mb-10"><a href="{{ url_for('vacancy_detail', vacancy_id=v.id) }}" class="link-primary">{{ v.title }}</a></h3>
+                <p class="text-dark font-weight-bold mb-10">🏢 {{ v.company.username }}</p>
+                <p class="mb-0 text-muted"><strong>Зарплата:</strong>
+                    {% if v.salary_from and v.salary_to %}
+                        <span class="text-dark">{{ v.salary_from }} - {{ v.salary_to }} ₽</span>
+                    {% elif v.salary_from %}
+                        <span class="text-dark">от {{ v.salary_from }} ₽</span>
+                    {% elif v.salary_to %}
+                        <span class="text-dark">до {{ v.salary_to }} ₽</span>
                     {% else %}
-                        <button class="btn" disabled
-                                style="background: #bdc3c7; cursor: not-allowed; box-sizing: border-box; flex: 1;">
-                                Отклик недоступен
-                        </button>
+                        <span class="text-dark">По договоренности</span>
                     {% endif %}
-
-                    {% if current_user.is_authenticated %}
-                    <form action="/toggle_fav_vacancy" method="POST">
-                        <input type="hidden" name="vacancy_id" value="{{ vacancy.id }}">
-                        <input type="hidden" name="vacancy_title" value="{{ vacancy.name }}">
-                        <input type="hidden" name="hh_url" value="{{ vacancy.hhUrl or '' }}">
-                        <button type="submit" class="btn" style="background: {{ '#e74c3c' if vacancy.id in fav_vacancy_ids else '#ecf0f1' }}; color: {{ '#fff' if vacancy.id in fav_vacancy_ids else '#333' }}; font-size: 1.2em; padding: 10px; width: 45px;" title="Сохранить вакансию">
-                            ❤
-                        </button>
-                    </form>
-                    {% endif %}
-                </div>
+                </p>
+                <p class="mb-0 text-muted mt-10"><strong>Опыт:</strong> <span class="text-dark">{{ v.experience }}</span></p>
             </div>
-        {% else %}
-            <div style="grid-column: 1 / -1; text-align: center; padding: 40px;">
-                <h3>Нет подходящих вакансий 😔</h3>
-                <p>Попробуй изменить параметры фильтра</p>
+            <div class="flex-row mt-20">
+                <a href="{{ url_for('vacancy_detail', vacancy_id=v.id) }}" class="btn btn-primary" style="flex: 1;">Подробнее</a>
+                {% if current_user.is_authenticated and current_user.role == 'user' %}
+                <form action="/toggle_fav_vacancy" method="POST" style="margin: 0;">
+                    <input type="hidden" name="vacancy_id" value="{{ v.id }}">
+                    <input type="hidden" name="vacancy_title" value="{{ v.title }}">
+                    <button type="submit" class="btn-heart {% if v.id in fav_vacancy_ids %}active{% endif %}" title="В избранное">❤</button>
+                </form>
+                {% endif %}
             </div>
-        {% endfor %}
-    </div>
-
-    <!-- Пагинация -->
-    {% if total_pages > 1 %}
-    <div class="pagination">
-        {% if current_page > 1 %}
-            <a href="/vacancies?page={{ current_page - 1 }}&search={{ search_query }}&salary_from={{ salary_from }}" class="btn-page">❮ Назад</a>
-        {% endif %}
-
-        <span class="page-info">Страница {{ current_page }} из {{ total_pages }}</span>
-
-        {% if current_page < total_pages %}
-            <a href="/vacancies?page={{ current_page + 1 }}&search={{ search_query }}&salary_from={{ salary_from }}" class="btn-page">Вперед ❯</a>
-        {% endif %}
-    </div>
-    {% endif %}
+        </div>
+    {% else %}
+        <div class="card p-20 text-center" style="grid-column: 1 / -1;">
+            <h3>Ничего не нашли 😔</h3>
+            <p class="text-muted mb-0">Попробуйте изменить параметры фильтров.</p>
+        </div>
+    {% endfor %}
+</div>
 {% endblock %}

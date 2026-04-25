@@ -1,73 +1,298 @@
-/* Базовые настройки */
-body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; background: #f4f7f6; color: #333; }
-a { text-decoration: none; }
+:root {
+  /* Яркие, неоновые акценты (светятся в темноте) */
+  --primary: #A7C957;       /* Яркий матча / Неоновый лайм */
+  --primary-dark: #C5E18A;  /* Еще светлее при наведении */
+  --success: #38B000;       /* Сочный изумрудный */
+  --success-dark: #70E000;
+  --warning: #F4A261;       /* Яркий персиково-желтый */
+  --danger: #F28482;        /* Мягкий коралловый (красный в темноте бьет по глазам, этот — идеален) */
 
-/* Навигация */
-.navbar { background: #2c3e50; color: white; padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; }
-.navbar a { color: white; text-decoration: none; font-weight: bold; }
-.nav-links { list-style: none; display: flex; gap: 20px; padding: 0; margin: 0; }
+  /* Темные фоны */
+  --bg: #121614;            /* Глубокий темный фон (ночь) */
+  --surface: #1E2420;       /* Фон для карточек и панелей (чуть светлее) */
+  --border-color: #2D3630;  /* Цвет рамок */
 
-/* Сетки и контейнеры */
-.container { max-width: 1000px; margin: 2rem auto; padding: 0 1rem; }
-.grid-2-col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; align-items: start; }
-.events-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
-.flex-row { display: flex; gap: 10px; align-items: center; }
-.flex-col { display: flex; flex-direction: column; gap: 10px; }
+  /* Светлый текст */
+  --text-main: #F4F6F0;     /* Основной текст (кремово-белый) */
+  --text-muted: #A3B1A5;    /* Второстепенный текст (серо-зеленый) */
 
-/* Карточки и панели */
-.card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); display: flex; flex-direction: column; justify-content: space-between; }
-.history-panel { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
-.gamification-panel { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); text-align: center; }
-.filters-panel { background: white; padding: 15px 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); margin-bottom: 20px; }
+  /* Объем и свечение */
+  --shadow: 0 8px 16px rgba(0, 0, 0, 0.4);
+  --shadow-hover: 0 12px 24px rgba(167, 201, 87, 0.15); /* Зеленоватое свечение карточек */
+  --border-radius: 12px;
 
-/* Бордеры-акценты для панелей */
-.border-warning { border-left: 4px solid #f39c12; }
-.border-success { border-left: 4px solid #2ecc71; }
-.border-primary { border-left: 4px solid #3498db; }
-
-
-.btn {
-    border: none;
-    padding: 10px 15px;
-    border-radius: 5px;
-    cursor: pointer;
-    text-align: center;
-    font-weight: bold;
-    box-sizing: border-box;
-    display: inline-block;
-    transition: background 0.2s;
-    color: white;
-    background: #3498db; /* базовый синий цвет */
-    text-decoration: none;
+  accent-color: var(--primary);
 }
 
-/* Кнопка Избранного */
-.btn-fav { font-size: 1.2em; padding: 10px; width: 45px; }
-.fav-active { background: #e74c3c; color: white; }
-.fav-inactive { background: #ecf0f1; color: #333; }
+body {
+  font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  margin: 0;
+  background: var(--bg);
+  color: var(--text-main);
+  line-height: 1.6;
+}
 
-/* Формы */
-.auth-form-container { max-width: 400px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-.create-form-container { max-width: 600px; margin: 0 auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-.form-control { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; margin-bottom: 10px; }
-.form-label { font-weight: bold; display: block; margin-bottom: 5px; }
+/* Typography utilities */
+h1, h2, h3, h4 { color: var(--text-main); margin-top: 0; }
+.text-muted { color: var(--text-muted); font-size: 0.9em; }
+.text-primary { color: var(--primary); }
+.text-success { color: var(--success); }
+.text-danger { color: var(--danger); }
+.text-dark { color: var(--text-main); } /* Переназначили на белый для темной темы */
+.text-center { text-align: center; }
+.font-weight-bold { font-weight: 600 !important; }
 
-/* Оповещения (Flash) */
-.alert { padding: 10px; margin-bottom: 20px; border-radius: 5px; text-align: center; font-weight: bold; color: white; }
-.alert-success { background: #2ecc71; }
-.alert-error { background: #e74c3c; }
+/* Navigation */
+.navbar {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border-color);
+  padding: 1rem 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.logo a { color: var(--primary) !important; font-size: 1.5rem; font-weight: bold; letter-spacing: 1px; text-decoration: none; }
+.navbar a { color: var(--text-main); text-decoration: none; font-weight: 500; transition: color 0.2s; }
+.navbar a:hover { color: var(--primary); }
+.nav-links { list-style: none; display: flex; gap: 20px; padding: 0; margin: 0; }
 
-/* Текста и бейджи */
-.text-muted { color: #7f8c8d; font-size: 0.9em; }
-.text-primary { color: #2980b9; }
-.text-dark { color: #2c3e50; font-size: 1.2em; }
-.badge { display: inline-block; padding: 3px 8px; border-radius: 10px; font-size: 0.8em; color: white; margin-top: 5px;}
-.badge-blue { background: #3498db; }
-.badge-green { background: #2ecc71; }
+/* Layout & Grid */
+.container { max-width: 1100px; margin: 2rem auto; padding: 0 1rem; }
+.grid-2-col { display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 20px; align-items: start; }
+.events-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
+.flex-row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.flex-col { display: flex; flex-direction: column; gap: 10px; }
+.flex-between { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; }
+.justify-between { justify-content: space-between; }
+.w-100 { width: 100%; box-sizing: border-box; }
+
+/* Spacing Utils */
+.mt-0 { margin-top: 0 !important; }
+.mt-10 { margin-top: 10px !important; }
+.mt-20 { margin-top: 20px !important; }
+.mt-30 { margin-top: 30px !important; }
+.mb-0 { margin-bottom: 0 !important; }
+.mb-10 { margin-bottom: 10px !important; }
+.mb-20 { margin-bottom: 20px !important; }
+.mb-30 { margin-bottom: 30px !important; }
+.p-20 { padding: 20px !important; }
+.pt-20 { padding-top: 20px !important; }
+
+/* Panels & Cards */
+.card, .history-panel, .gamification-panel, .filters-panel, .auth-form-container, .create-form-container {
+  background: var(--surface);
+  border: 1px solid var(--border-color);
+  padding: 20px;
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow);
+  transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
+}
+.card:hover {
+  box-shadow: var(--shadow-hover);
+  transform: translateY(-2px);
+  border-color: var(--primary); /* Яркая рамка при наведении */
+}
+.filters-panel { margin-bottom: 30px; padding: 20px 25px; }
+.gamification-panel { text-align: center; }
+.auth-form-container { max-width: 400px; margin: 2rem auto; }
+.create-form-container { max-width: 600px; margin: 2rem auto; }
+
+/* Borders */
+.border-warning { border-left: 4px solid var(--warning); }
+.border-success { border-left: 4px solid var(--success); }
+.border-primary { border-left: 4px solid var(--primary); }
+
+/* Buttons (ТЕМНЫЙ ТЕКСТ НА ЯРКОМ ФОНЕ) */
+.btn {
+  border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; text-align: center; font-weight: 700; box-sizing: border-box; display: inline-flex; justify-content: center; align-items: center; gap: 8px; transition: all 0.2s;
+  color: var(--bg); /* Темный текст */
+  background: var(--primary); /* Яркий фон */
+  text-decoration: none; font-size: 0.95rem; line-height: 1.5;
+}
+.btn:hover { background: var(--primary-dark); transform: translateY(-1px); box-shadow: 0 0 12px rgba(167, 201, 87, 0.4); }
+.btn-success { background: var(--success); }
+.btn-success:hover { background: var(--success-dark); box-shadow: 0 0 12px rgba(56, 176, 0, 0.4); }
+.btn-secondary { background: var(--border-color); color: var(--text-main); }
+.btn-secondary:hover { background: #3E4A42; color: var(--text-main); }
+.btn-danger { background: var(--danger); }
+.btn-danger:hover { background: #FF9E99; }
+.btn-outline { background: transparent; border: 2px solid var(--primary); color: var(--primary); }
+.btn-outline:hover { background: var(--primary); color: var(--bg); box-shadow: 0 0 12px rgba(167, 201, 87, 0.4);}
+
+/* Heart Buttons */
+.btn-heart, .btn-heart-text {
+    background: var(--border-color); color: var(--text-muted);
+    border-radius: 50%; width: 40px; height: 40px; padding: 0; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; border: none; cursor: pointer; transition: all 0.2s;
+}
+.btn-heart-text { width: auto; padding: 10px 20px; border-radius: 6px; font-weight: 600; font-size: 0.95rem; gap: 8px;}
+.btn-heart.active, .btn-heart-text.active { background: var(--danger); color: var(--bg); box-shadow: 0 0 10px rgba(242, 132, 130, 0.4);}
+.btn-heart:hover, .btn-heart-text:hover { transform: scale(1.05); background: #3E4A42; color: var(--text-main); }
+.btn-heart.active:hover, .btn-heart-text.active:hover { background: #FF9E99; color: var(--bg); }
+
+/* Alerts */
+.alert { padding: 15px; margin-bottom: 20px; border-radius: 6px; text-align: center; font-weight: bold; color: var(--bg); animation: slideIn 0.3s ease-out; }
+.alert-success { background: var(--success); }
+.alert-error { background: var(--danger); }
+@keyframes slideIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+
+/* Badges */
+.badge { display: inline-block; padding: 4px 10px; border-radius: 12px; font-size: 0.75em; font-weight: bold; color: var(--bg); margin-bottom: 10px; text-transform: uppercase; letter-spacing: 0.5px; }
+.badge-blue { background: var(--primary); }
+.badge-green { background: var(--success); }
+.badge-orange { background: var(--warning); }
+
+/* Lists */
 .list-unstyled { list-style: none; padding: 0; margin: 0; }
-.list-item { background: #f9f9f9; padding: 15px; border-radius: 5px; margin-bottom: 10px; }
+.list-item { background: var(--bg); padding: 15px; border-radius: 6px; margin-bottom: 10px; border: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; gap: 15px; flex-wrap: wrap; }
 
-/* Геймификация */
-.progress-bar-bg { background: #e0e0e0; border-radius: 10px; height: 20px; width: 100%; overflow: hidden; margin-bottom: 10px; }
-.progress-bar-fill { background: #2ecc71; height: 100%; transition: width 0.5s ease-in-out; }
-.radar-container { text-align: center; margin-top: 20px; display: flex; justify-content: center; }
+/* Gamification */
+.progress-bar-bg { background: var(--border-color); border-radius: 10px; height: 12px; width: 100%; overflow: hidden; margin: 15px 0; }
+.progress-bar-fill { background: var(--primary); height: 100%; transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 0 10px rgba(167, 201, 87, 0.8); }
+.radar-container { display: flex; justify-content: center; padding: 10px; }
+
+/* Pagination */
+.pagination { display: flex; justify-content: center; align-items: center; gap: 15px; margin-top: 40px; margin-bottom: 40px; }
+.btn-page { padding: 8px 16px; background: var(--surface); border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-main); text-decoration: none; font-weight: 500; transition: all 0.2s; }
+.btn-page:hover { background: var(--primary); color: var(--bg); border-color: var(--primary); box-shadow: 0 0 10px rgba(167, 201, 87, 0.4);}
+.page-info { font-weight: bold; color: var(--text-muted); }
+
+/* Tables/Data */
+.data-label { font-weight: 600; color: var(--text-muted); font-size: 0.85rem; text-transform: uppercase; margin-bottom: 4px; display: block; }
+.data-value { font-size: 1rem; color: var(--text-main); font-weight: 500; }
+
+/* Links */
+a.link-primary { color: var(--primary); text-decoration: none; font-weight: 500; transition: color 0.2s; }
+a.link-primary:hover { color: var(--primary-dark); text-shadow: 0 0 8px rgba(167, 201, 87, 0.4); }
+
+/* ========================================= */
+/* СТИЛИЗАЦИЯ ФОРМ (Инпуты, Селекты, Даты)   */
+/* ========================================= */
+.form-group { margin-bottom: 20px; width: 100%; min-width: 0; }
+.form-label { font-weight: 600; display: block; margin-bottom: 6px; color: var(--primary); font-size: 0.9rem; letter-spacing: 0.3px; }
+
+.form-control {
+    width: 100%; padding: 12px 16px;
+    border: 2px solid var(--border-color);
+    border-radius: 8px; box-sizing: border-box; font-family: inherit; font-size: 0.95rem;
+    color: var(--text-main);
+    background-color: var(--bg); /* Темный фон инпута */
+    transition: all 0.25s ease;
+}
+.form-control:hover { border-color: #3E4A42; }
+.form-control:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 4px rgba(167, 201, 87, 0.15); background-color: var(--surface); }
+
+/* Ошибки валидации */
+.form-control.is-invalid { border-color: var(--danger) !important; background-color: rgba(242, 132, 130, 0.05); }
+.error-text { color: var(--danger); font-size: 0.85em; margin-top: 5px; display: block; font-weight: 500; }
+/* ========================================= */
+/* ФИКС БЕЛОГО ФОНА ПРИ АВТОЗАПОЛНЕНИИ       */
+/* ========================================= */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active,
+select:-webkit-autofill,
+select:-webkit-autofill:hover,
+select:-webkit-autofill:focus {
+    /* Принудительно заливаем фон нашим темным цветом */
+    -webkit-box-shadow: 0 0 0 1000px var(--bg) inset !important;
+    /* Возвращаем светлый текст */
+    -webkit-text-fill-color: var(--text-main) !important;
+    /* Запрещаем браузеру менять фон обратно */
+    transition: background-color 5000s ease-in-out 0s;
+}
+
+/* ========================================= */
+/* CHOICES.JS (Темная тема - ЖЕСТКИЙ ФИКС)   */
+/* ========================================= */
+.choices { margin-bottom: 0; width: 100%; min-width: 0; }
+
+/* Закрытое состояние инпута */
+.choices__inner {
+    background-color: var(--bg) !important; /* Жестко убили белый фон! */
+    border: 2px solid var(--border-color) !important;
+    border-radius: 8px !important; padding: 7px 16px; min-height: 48px;
+    font-size: 0.95rem; color: var(--text-main) !important; /* Текст светлый */
+    transition: all 0.25s ease; display: flex; align-items: center; width: 100%; box-sizing: border-box;
+}
+.choices__inner .choices__item--selectable { color: var(--text-main) !important; }
+
+/* Открытое состояние (фокус) */
+.is-focused .choices__inner, .is-open .choices__inner {
+    border-color: var(--primary) !important;
+    box-shadow: 0 0 0 4px rgba(167, 201, 87, 0.15) !important;
+    background-color: var(--surface) !important;
+}
+
+/* Сама выпадающая панелька со списком */
+.choices__list--dropdown, .choices__list[aria-expanded] {
+    background-color: var(--surface) !important; /* Жестко убили белый фон списка! */
+    border: 2px solid var(--border-color) !important;
+    border-radius: 8px !important;
+    box-shadow: var(--shadow-hover) !important;
+    margin-top: 4px; z-index: 100; padding: 5px; word-break: break-word;
+}
+
+/* Элементы внутри списка (варианты ответов) */
+.choices__list--dropdown .choices__item, .choices__list[aria-expanded] .choices__item {
+    color: var(--text-main) !important; /* Делаем варианты ответов светлыми */
+}
+
+/* Выделенный (наведенный) элемент внутри списка */
+.choices__list--dropdown .choices__item--selectable.is-highlighted {
+    background-color: rgba(167, 201, 87, 0.15) !important;
+    color: var(--primary) !important;
+    border-radius: 6px;
+}
+
+/* Ярко-зеленая стрелочка селекта */
+.choices[data-type*="select-one"]::after {
+    border: none; width: 16px; height: 16px;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23A7C957' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E") !important;
+    background-size: contain; background-repeat: no-repeat; right: 15px; top: 50%; margin-top: -8px; transition: transform 0.2s ease;
+}
+.choices[data-type*="select-one"].is-open::after { transform: rotate(180deg) !important; }
+
+/* Подстраховка для обычных селектов (если скрипт не сработает) */
+select.form-control {
+    background-color: var(--bg);
+    color: var(--text-main);
+}
+select.form-control option {
+    background-color: var(--surface);
+    color: var(--text-main);
+}
+/* ========================================= */
+/* FLATPICKR (Кастомизация темного календаря)*/
+/* ========================================= */
+input[type="date"]::-webkit-calendar-picker-indicator { display: none; -webkit-appearance: none; }
+
+.flatpickr-calendar {
+    background: var(--surface) !important;
+    border: 1px solid var(--border-color) !important;
+    box-shadow: var(--shadow-hover) !important;
+}
+/* Перекрашиваем выбранные даты в наш неоновый зеленый */
+.flatpickr-day.selected, .flatpickr-day.startRange, .flatpickr-day.endRange,
+.flatpickr-day.selected.inRange, .flatpickr-day.selected:focus, .flatpickr-day.selected:hover,
+.flatpickr-day.selected:prevMonthDay, .flatpickr-day.selected:nextMonthDay {
+    background: var(--primary) !important;
+    border-color: var(--primary) !important;
+    color: var(--bg) !important; /* Тёмный текст на ярком выделении */
+    font-weight: bold;
+}
+.flatpickr-day:hover {
+    background: rgba(167, 201, 87, 0.15) !important;
+    border-color: transparent !important;
+    color: var(--primary) !important;
+}
+
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active {
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: var(--text-main) !important;
+    transition: background-color 5000s ease-in-out 0s;
+    box-shadow: inset 0 0 20px 20px var(--bg) !important;
+}

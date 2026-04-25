@@ -1,35 +1,35 @@
 {% extends 'base.html' %}
 {% block content %}
-<a href="{{ url_for('search_talents') }}" class="text-muted">❮ Назад к списку</a>
+<a href="{{ url_for('search_talents') }}" class="link-primary mb-20" style="display: inline-block;">❮ Назад к списку</a>
 
-<div style="margin-top: 20px; margin-bottom: 20px;">
-    <h1>Кандидат: {{ talent.username }}</h1>
-    <p class="text-muted">Контакт: <a href="mailto:{{ talent.mail }}">{{ talent.mail }}</a></p>
+<div class="history-panel border-primary mb-30">
+    <h1 class="mt-0 mb-10">Кандидат: {{ talent.username }}</h1>
+    <p class="text-muted mb-0">Контакт: <a href="mailto:{{ talent.mail }}" class="link-primary">{{ talent.mail }}</a></p>
 </div>
 
 <div class="grid-2-col">
-    <!-- Левая колонка: Радар -->
     <div class="gamification-panel">
-        <h3>Компетенции ({{ talent.points }} XP)</h3>
+        <h3 class="mt-0">Компетенции ({{ talent.points }} XP)</h3>
         <div class="radar-container">
-            <canvas id="talentRadar" width="300" height="300"></canvas>
+            <canvas id="talentRadar"></canvas>
         </div>
     </div>
 
-    <!-- Правая колонка: Подтвержденные дипломы -->
     <div class="history-panel border-success">
-        <h3>🏆 Подтвержденные достижения</h3>
-        <ul class="list-unstyled">
+        <h3 class="mt-0">🏆 Подтвержденные достижения</h3>
+        <ul class="list-unstyled mt-20">
             {% for p in talent.participations if p.status == 'completed' %}
-                <li class="list-item">
-                    <strong>{{ p.event_title }}</strong> <br>
-                    <span class="badge badge-green">{{ p.achievement }}</span>
-                    {% if p.certificate_file %}
-                        <a href="{{ url_for('static', filename='uploads/' ~ p.certificate_file) }}" target="_blank" class="action-link" style="margin-left: 10px;">📄 Посмотреть диплом</a>
-                    {% endif %}
+                <li class="list-item flex-col" style="align-items: flex-start;">
+                    <strong class="w-100">{{ p.event_title }}</strong>
+                    <div class="flex-between w-100 mt-10">
+                        <span class="badge badge-green mb-0">{{ p.achievement }}</span>
+                        {% if p.certificate_file %}
+                            <a href="{{ url_for('static', filename='uploads/' ~ p.certificate_file) }}" target="_blank" class="link-primary" style="font-size: 0.85em;">📄 Посмотреть диплом</a>
+                        {% endif %}
+                    </div>
                 </li>
             {% else %}
-                <p class="text-muted">У кандидата пока нет загруженных дипломов.</p>
+                <p class="text-muted mb-0">У кандидата пока нет загруженных дипломов.</p>
             {% endfor %}
         </ul>
     </div>
@@ -49,6 +49,7 @@
                     backgroundColor: 'rgba(46, 204, 113, 0.4)',
                     borderColor: 'rgba(39, 174, 96, 1)',
                     pointBackgroundColor: 'rgba(39, 174, 96, 1)',
+                    borderWidth: 2
                 }]
             },
             options: { scales: { r: { beginAtZero: true, ticks: { stepSize: 1, precision: 0 } } }, plugins: { legend: { display: false } } }

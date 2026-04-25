@@ -85,6 +85,7 @@ class InternalVacancy(db.Model):
     __tablename__ = 'internal_vacancies'
     id = db.Column(db.Integer, primary_key=True)
     company_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    company = db.relationship('User', backref='my_posted_vacancies')
     title = db.Column(db.String(250), nullable=False)
     salary_from = db.Column(db.Integer, nullable=True)
     salary_to = db.Column(db.Integer, nullable=True)
@@ -130,19 +131,6 @@ class InternalVacancyValidation(BaseModel):
 
         return value
 
-    @field_validator("experience", "schedule", "category")
-    @classmethod
-    def validate_optional_fields(cls, value):
-        if value is None:
-            return value
-
-        value = value.strip()
-
-        if len(value) > 100:
-            raise ValueError("Слишком длинное значение")
-
-        return value
-
     @model_validator(mode="after")
     def validate_salary_range(self):
         if (
@@ -153,3 +141,18 @@ class InternalVacancyValidation(BaseModel):
             raise ValueError("Зарплата 'от' не может быть больше зарплаты 'до'")
 
         return self
+
+class InternalEvent(db.Model):
+    __tablename__ = 'internal_events'
+    id = db.Column(db.Integer, primary_key=True)
+    company_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    title = db.Column(db.String(250), nullable=False)
+    description = db.Column(db.Text, nullable=False)
+    event_date = db.Column(db.Date, nullable=False)
+    event_format = db.Column(db.String(50)) # очное, онлайн
+    location = db.Column(db.String(500))
+    category = db.Column(db.String(100))
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    # Связь с компанией
+    company = db.relationship('User', backref='my_posted_events')

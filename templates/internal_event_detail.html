@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+{% block content %}
+<a href="{{ url_for('index') }}" class="link-primary mb-20" style="display: inline-block;">❮ Назад к списку</a>
+
+<div class="history-panel border-success">
+    <span class="badge badge-green mb-10">Событие от партнера</span>
+
+    <h1 class="mt-0">{{ event.title }}</h1>
+
+    <div class="flex-row text-muted mb-20" style="gap: 30px;">
+        <span><span class="data-label">Дата</span><span class="data-value">{{ event.event_date.strftime('%d.%m.%Y') }}</span></span>
+        <span><span class="data-label">Формат</span><span class="data-value">{% if event.event_format == 'offline' %}Очное{% elif event.event_format == 'online' %}Онлайн{% else %}Смешанное{% endif %}</span></span>
+        <span><span class="data-label">Место</span><span class="data-value">{{ event.location if event.location else 'Онлайн' }}</span></span>
+    </div>
+
+    <hr style="border: 0; border-top: 1px solid var(--light-gray); margin: 20px 0;">
+
+    <h3 class="mb-10">Организатор</h3>
+    <p class="mb-20"><strong>{{ event.company.username }}</strong></p>
+
+    <h3 class="mb-10">Описание</h3>
+    <div style="white-space: pre-wrap; line-height: 1.6; margin-bottom: 30px;">{{ event.description }}</div>
+
+    <div class="flex-row" style="border-top: 1px solid var(--light-gray); padding-top: 20px;">
+        {% if current_user.is_authenticated %}
+            <form action="/toggle_fav_event" method="POST" style="margin: 0;">
+                <input type="hidden" name="event_id" value="{{ event.id }}">
+                <input type="hidden" name="event_title" value="{{ event.title }}">
+                <button type="submit" class="btn btn-heart-text {% if event.id in fav_event_ids %}active{% endif %}">
+                    ❤ {% if event.id in fav_event_ids %}В избранном{% else %}В избранное{% endif %}
+                </button>
+            </form>
+
+            {% if current_user.role == 'user' %}
+                <a href="mailto:{{ event.company.mail }}?subject=Участие в мероприятии: {{ event.title }}" class="btn btn-success">
+                    📧 Связаться с организатором
+                </a>
+            {% endif %}
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

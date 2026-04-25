@@ -1,8 +1,8 @@
 from flask import Flask, render_template, request, redirect, url_for, flash
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
-from services.api_client import get_events, get_vacancies
-from models import db, User, Participation, FavoriteEvent, FavoriteVacancy, RegisterValidation, InternalVacancy, CompanyProfile, InternalVacancyValidation
+from services.api_client import get_events, get_vacancies, get_event_detail
+from models import db, User, Participation, FavoriteEvent, FavoriteVacancy, RegisterValidation, InternalVacancy, CompanyProfile, InternalVacancyValidation, InternalEvent
 from collections import Counter # Понадобится для радара
 import json # Понадобится для передачи данных в JS
 import os
@@ -36,80 +36,112 @@ def load_user(user_id):
 with app.app_context():
     db.create_all()
 
+
 @app.route('/')
 def index():
+    return render_template('landing.html')
+
+
+@app.route('/events')
+def events_page():
+    # Сюда перенесли весь поиск и фильтрацию мероприятий
     page = request.args.get('page', 1, type=int)
     search_query = request.args.get('search', '')
     event_format = request.args.get('format', '')
+    category = request.args.get('category', '')
+    event_type = request.args.get('type', '')
+    age = request.args.get('age', type=int)
     date_from = request.args.get('date_from', '')
     date_to = request.args.get('date_to', '')
 
-    events, total_pages = get_events(page, search_query, event_format, date_from, date_to)
+    api_events, total_pages = get_events(
+        page, search_query, event_format,
+        date_from, date_to,
+        event_type, age=age,
+        category=category
+    )
+
+    internal_query = InternalEvent.query
+    if search_query:
+        internal_query = internal_query.filter(InternalEvent.title.ilike(f'%{search_query}%'))
+
+    if category:
+        internal_query = internal_query.filter(InternalEvent.category == category)
+
+    internal_events = internal_query.order_by(InternalEvent.event_date.asc()).all()
 
     fav_event_ids = []
     if current_user.is_authenticated:
-        fav_event_ids =[f.event_id for f in FavoriteEvent.query.filter_by(user_id=current_user.id).all()]
+        fav_event_ids = [f.event_id for f in FavoriteEvent.query.filter_by(user_id=current_user.id).all()]
 
-    # ПОЛУЧАЕМ ТЕКУЩУЮ ДАТУ
     today_date = datetime.now().strftime('%Y-%m-%d')
 
     return render_template(
         'index.html',
-        events=events,
+        events=api_events,
+        internal_events=internal_events,
+        category=category,
         current_page=page,
         total_pages=total_pages,
         search_query=search_query,
         event_format=event_format,
+        event_type=event_type,
+        age=age,
         date_from=date_from,
         date_to=date_to,
         fav_event_ids=fav_event_ids,
-        today_date=today_date # <- ИМЕННО ЭТА СТРОЧКА ИСПРАВЛЯЕТ ОШИБКУ
+        today_date=today_date
     )
+
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
+    errors = {}
+    form_data = {}
+
     if request.method == 'POST':
+        # Собираем данные из формы, чтобы вернуть их обратно при ошибке
+        form_data = request.form.to_dict()
+
         try:
             data = RegisterValidation(
-                username = request.form.get('username'),
-                mail = request.form.get('mail'),
-                password = request.form.get('password'),
+                username=request.form.get('username'),
+                mail=request.form.get('mail'),
+                password=request.form.get('password'),
                 role=request.form.get('role')
             )
+
+            # Проверка уникальности в БД (теперь добавляем это в словарь ошибок)
+            if User.query.filter_by(username=data.username).first():
+                errors['username'] = 'Это имя уже занято!'
+
+            if User.query.filter_by(mail=data.mail).first():
+                errors['mail'] = 'Этот mail уже занят!'
+
+            # Если ошибок БД нет, продолжаем
+            if not errors:
+                hashed_password = generate_password_hash(data.password)
+                new_user = User(
+                    username=data.username,
+                    mail=data.mail,
+                    password=hashed_password,
+                    role=data.role.value
+                )
+                db.session.add(new_user)
+                db.session.commit()
+                login_user(new_user)
+
+                return redirect(url_for('company_profile' if new_user.role == 'company' else 'profile'))
+
         except ValidationError as e:
-            flash("Некорректные данные")
-
+            # Превращаем ошибки Pydantic в удобный словарь {поле: сообщение}
             for error in e.errors():
-                flash(error['msg'])
+                field = error['loc'][0]
+                msg = error['msg'].replace("Value error, ", "")
+                errors[field] = msg
 
-            return redirect(url_for('register'))
-
-        # Проверка, есть ли такой логин
-        if User.query.filter_by(username=data.username).first():
-            flash('Это имя уже занято!')
-            return redirect(url_for('register'))
-
-        if User.query.filter_by(mail=data.mail).first():
-            flash('Этот mail уже занят!')
-            return redirect(url_for('register'))
-
-        # Создаем пользователя, шифруя пароль
-        hashed_password = generate_password_hash(data.password)
-        new_user = User(username=data.username, mail=data.mail, password=hashed_password, role=data.role.value)
-
-        db.session.add(new_user)
-        db.session.commit()
-
-        # Сразу логиним его после регистрации
-        login_user(new_user)
-
-        if (new_user.role == 'user'):
-            return redirect(url_for('profile'))
-
-        elif (new_user.role == 'company'):
-            return redirect(url_for('company_profile'))
-
-    return render_template('register.html')
+    # Если это GET или были ошибки — рендерим ту же страницу, передавая ошибки и старые данные
+    return render_template('register.html', errors=errors, form_data=form_data)
 
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -233,12 +265,13 @@ def company_profile():
         chart_labels = list(counts.keys())
         chart_data = list(counts.values())
         # Привязываем фирменные цвета к направлениям
+        # Внутри функции company_profile в app.py
         colors_map = {
-            'IT и Data Science': '#3498db',
-            'Биомед': '#2ecc71',
-            'Физмат и Инженерия': '#9b59b6',
-            'Экономика': '#f1c40f',
-            'Гуманитарные и общие': '#e67e22'
+            'IT и Data Science': '#A7C957',  # Наш яркий неон
+            'Биомед': '#3A5A40',  # Глубокий зеленый
+            'Физмат и Инженерия': '#E09F3E',  # Горчично-желтый
+            'Экономика': '#BC4749',  # Терракотовый
+            'Гуманитарные и общие': '#7A7067'  # Теплый серый
         }
         background_colors =[colors_map.get(lbl, '#95a5a6') for lbl in chart_labels]
 
@@ -297,7 +330,62 @@ def edit_company_profile():
     # При GET запросе отдаем форму, заполненную текущими данными
     return render_template('edit_company_profile.html', profile_data=profile_data)
 
-# --- НОВЫЕ РОУТЫ ---
+
+@app.route('/event/<int:event_id>')
+def event_detail(event_id):
+    event = get_event_detail(event_id)
+
+    if not event:
+        flash('К сожалению, мероприятие не найдено.', 'error')
+        return redirect(url_for('index'))
+
+    fav_event_ids = []
+    if current_user.is_authenticated:
+        fav_event_ids = [f.event_id for f in FavoriteEvent.query.filter_by(user_id=current_user.id).all()]
+
+    today_date = datetime.now().strftime('%Y-%m-%d')
+
+    return render_template(
+        'event_detail.html',
+        event=event,
+        fav_event_ids=fav_event_ids,
+        today_date=today_date
+    )
+
+@app.route('/create_event', methods=['GET', 'POST'])
+@login_required
+def create_event():
+    if current_user.role != 'company':
+        return redirect(url_for('index'))
+
+    if request.method == 'POST':
+        new_event = InternalEvent(
+            company_id=current_user.id,
+            title=request.form.get('title'),
+            description=request.form.get('description'),
+            event_date=datetime.strptime(request.form.get('date'), '%Y-%m-%d'),
+            event_format=request.form.get('format'),
+            location=request.form.get('location'),
+            category=request.form.get('category')
+        )
+        db.session.add(new_event)
+        db.session.commit()
+        flash('Ваше мероприятие опубликовано!', 'success')
+        return redirect(url_for('company_profile'))
+
+    return render_template('create_event.html')
+
+
+@app.route('/internal_event/<int:event_id>')
+def internal_event_detail(event_id):
+    # Ищем событие в нашей базе
+    event = InternalEvent.query.get_or_404(event_id)
+
+    fav_event_ids = []
+    if current_user.is_authenticated:
+        fav_event_ids = [f.event_id for f in FavoriteEvent.query.filter_by(user_id=current_user.id).all()]
+
+    return render_template('internal_event_detail.html', event=event, fav_event_ids=fav_event_ids)
 
 @app.route('/company_vacancies')
 @login_required
@@ -342,6 +430,9 @@ def talent_detail(user_id):
 @app.route('/participate', methods=['POST'])
 @login_required
 def participate():
+    if current_user.role != 'user':
+        flash('Компании не могут участвовать в мероприятиях.', 'error')
+        return redirect(url_for('index'))
     event_id = request.form.get('event_id')
     event_title = request.form.get('event_title')
 
@@ -372,6 +463,28 @@ def participate():
     return redirect(request.referrer or url_for('index'))
 
 
+@app.route('/cancel_participation', methods=['POST'])
+@login_required
+def cancel_participation():
+    participation_id = request.form.get('participation_id')
+
+    # Ищем запись именно этого пользователя, чтобы никто чужой не удалил
+    participation = Participation.query.filter_by(id=participation_id, user_id=current_user.id).first()
+
+    if participation:
+        db.session.delete(participation)
+        db.session.commit()
+        flash('Запись на мероприятие отменена.', 'success')
+    else:
+        flash('Запись не найдена.', 'error')
+
+    return redirect(url_for('profile'))
+
+ALLOWED_EXTENSIONS = {'pdf', 'png', 'jpg', 'jpeg'}
+
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
 # НОВЫЙ РОУТ ДЛЯ ПОДТВЕРЖДЕНИЯ РЕЗУЛЬТАТОВ
 @app.route('/claim_reward', methods=['POST'])
 @login_required
@@ -387,6 +500,11 @@ def claim_reward():
     file = request.files['certificate']
     if file.filename == '':
         flash('Файл не выбран!', 'error')
+        return redirect(url_for('profile'))
+
+    # НОВАЯ ПРОВЕРКА БЕЗОПАСНОСТИ:
+    if not allowed_file(file.filename):
+        flash('Недопустимый формат файла. Разрешены только PDF, JPG, PNG.', 'error')
         return redirect(url_for('profile'))
 
     participation = Participation.query.filter_by(id=participation_id, user_id=current_user.id).first()
@@ -417,18 +535,18 @@ def claim_reward():
 @app.route('/toggle_fav_event', methods=['POST'])
 @login_required
 def toggle_fav_event():
+    # Теперь и компании, и исследователи могут добавлять в избранное
     event_id = request.form.get('event_id')
     event_title = request.form.get('event_title')
 
     fav = FavoriteEvent.query.filter_by(user_id=current_user.id, event_id=event_id).first()
     if fav:
-        db.session.delete(fav)  # Если есть - удаляем
+        db.session.delete(fav)
     else:
         new_fav = FavoriteEvent(user_id=current_user.id, event_id=event_id, event_title=event_title)
-        db.session.add(new_fav)  # Если нет - добавляем
+        db.session.add(new_fav)
     db.session.commit()
     return redirect(request.referrer or url_for('index'))
-
 
 @app.route('/toggle_fav_vacancy', methods=['POST'])
 @login_required
@@ -447,24 +565,88 @@ def toggle_fav_vacancy():
     db.session.commit()
     return redirect(request.referrer or url_for('vacancies'))
 
+
+# 1. Свои вакансии (Партнеры)
 @app.route('/vacancies')
 def vacancies():
-    page = request.args.get('page', 1, type=int)
+    # Собираем все фильтры из строки запроса
     search_query = request.args.get('search', '')
-    salary_from = request.args.get('salary_from', '')
+    salary_min = request.args.get('salary_min', type=int)
+    category = request.args.get('category', '')
+    experience = request.args.get('experience', '')
+    schedule = request.args.get('schedule', '')
 
-    vacancies_list, total_pages = get_vacancies(page, search_query, salary_from)
+    query = InternalVacancy.query
 
-    # Получаем ID избранных вакансий
-    fav_vacancy_ids =[]
-    if current_user.is_authenticated:
-        fav_vacancy_ids =[f.vacancy_id for f in FavoriteVacancy.query.filter_by(user_id=current_user.id).all()]
+    # Применяем фильтры по цепочке
+    if search_query:
+        query = query.filter(InternalVacancy.title.ilike(f'%{search_query}%'))
+    if salary_min:
+        query = query.filter(InternalVacancy.salary_from >= salary_min)
+    if category:
+        query = query.filter(InternalVacancy.category == category)
+    if experience:
+        query = query.filter(InternalVacancy.experience == experience)
+    if schedule:
+        query = query.filter(InternalVacancy.schedule == schedule)
+
+    vacancies_list = query.order_by(InternalVacancy.created_at.desc()).all()
+
+    fav_vacancy_ids = []
+    if current_user.is_authenticated and current_user.role == 'user':
+        fav_vacancy_ids = [f.vacancy_id for f in FavoriteVacancy.query.filter_by(user_id=current_user.id).all()]
 
     return render_template(
         'vacancies.html',
-        vacancies=vacancies_list, current_page=page, total_pages=total_pages,
-        search_query=search_query, salary_from=salary_from,
-        fav_vacancy_ids=fav_vacancy_ids # Передаем в шаблон
+        vacancies=vacancies_list,
+        search_query=search_query,
+        salary_min=salary_min,
+        category=category,
+        experience=experience,
+        schedule=schedule,
+        fav_vacancy_ids=fav_vacancy_ids
+    )
+
+
+@app.route('/vacancies/external')
+def vacancies_external():
+    page = request.args.get('page', 1, type=int)
+    search_query = request.args.get('search', '')
+    salary_from = request.args.get('salary_from', type=int)
+    salary_to = request.args.get('salary_to', type=int)
+
+    # Для API нам нужны ID (обычно: 1 - без опыта, 2 - 1-3 года и т.д.)
+    experience_id = request.args.get('experience_id', type=int)
+
+    # Флаг глобального поиска
+    search_all = request.args.get('search_all') == 'true'
+
+    # 1. Получаем внешние вакансии
+    external_list, total_pages = get_vacancies(page, search_query, salary_from, salary_to, experience_id)
+
+    # 2. Если включен глобальный поиск - ищем партнеров
+    internal_vacancies = []
+    if search_all and search_query:
+        internal_vacancies = InternalVacancy.query.filter(
+            InternalVacancy.title.ilike(f'%{search_query}%')
+        ).all()
+
+    fav_vacancy_ids = []
+    if current_user.is_authenticated:
+        fav_vacancy_ids = [f.vacancy_id for f in FavoriteVacancy.query.filter_by(user_id=current_user.id).all()]
+
+    return render_template(
+        'vacancies_external.html',
+        vacancies=external_list,
+        internal_vacancies=internal_vacancies,
+        current_page=page,
+        total_pages=total_pages,
+        search_query=search_query,
+        salary_from=salary_from,
+        salary_to=salary_to,
+        experience_id=experience_id,
+        search_all=search_all,
+        fav_vacancy_ids=fav_vacancy_ids
     )
 
 @app.route('/search_talents')
@@ -491,16 +673,30 @@ def create_vacancy():
         # Сюда можно добавить валидацию Pydantic, как вы делали при регистрации!
 
         try:
-            new_vacancy = InternalVacancyValidation(
-                company_id=current_user.id,
-                title=request.form.get('title'),
-                salary_from=request.form.get('salary_from') or None,
-                salary_to=request.form.get('salary_to') or None,
-                experience=request.form.get('experience'),
-                schedule=request.form.get('schedule'),
-                category=request.form.get('category'),
-                description=request.form.get('description')
+            form_dict = {
+                "company_id": current_user.id,
+                "title": request.form.get('title'),
+                "salary_from": request.form.get('salary_from') or None,
+                "salary_to": request.form.get('salary_to') or None,
+                "experience": request.form.get('experience'),
+                "schedule": request.form.get('schedule'),
+                "category": request.form.get('category'),
+                "description": request.form.get('description')
+            }
+
+            validated_data = InternalVacancyValidation(**form_dict)
+
+            new_db_vacancy = InternalVacancy(
+                company_id=validated_data.company_id,
+                title=validated_data.title,
+                salary_from=validated_data.salary_from,
+                salary_to=validated_data.salary_to,
+                experience=validated_data.experience,
+                schedule=validated_data.schedule,
+                category=validated_data.category,
+                description=validated_data.description
             )
+
         except ValidationError as e:
             flash("Некорректные данные")
 
@@ -509,7 +705,7 @@ def create_vacancy():
 
             return redirect(url_for('create_vacancy'))
 
-        db.session.add(new_vacancy)
+        db.session.add(new_db_vacancy)
         db.session.commit()
         flash('Вакансия успешно опубликована!', 'success')
         return redirect(url_for('company_profile'))

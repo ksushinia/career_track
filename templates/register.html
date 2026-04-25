@@ -1,21 +1,37 @@
 {% extends 'base.html' %}
 {% block content %}
-    <div style="max-width: 400px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px;">
-        <h2>Регистрация пользователя</h2>
-        <form method="POST">
-            <p><input type="text" name="username" placeholder="Имя (например: ksusha_science)" required style="width: 100%; padding: 10px;"></p>
-            <p><input type="text" name="mail" placeholder="Твой email" required style="width: 100%; padding: 10px;"></p>
-            <p><input type="password" name="password" placeholder="Пароль" required style="width: 100%; padding: 10px;"></p>
-            <p>
-                <select name="role" required style="width: 100%; padding: 10px;">
+<div class="auth-form-container">
+    <h2 class="text-center mt-0 mb-20">Регистрация</h2>
+    <form method="POST" class="flex-col">
+        <div class="form-group">
+            <label class="form-label">Имя пользователя</label>
+            <input type="text" name="username" autocomplete="off" class="form-control {% if errors.username %}is-invalid{% endif %}" placeholder="Иван_Наумов" value="{{ form_data.username or '' }}">
+            {% if errors.username %}<small class="error-text">{{ errors.username }}</small>{% endif %}
+        </div>
 
-                    <option value="">Выберите роль</option>
-                    <option value="user">Исследователь</option>
-                    <option value="company">Компания</option>
+        <div class="form-group">
+            <label class="form-label">Email</label>
+            <input type="text" name="mail" autocomplete="off" class="form-control {% if errors.mail %}is-invalid{% endif %}" placeholder="example@mail.ru" value="{{ form_data.mail or '' }}">
+            {% if errors.mail %}<small class="error-text">{{ errors.mail }}</small>{% endif %}
+        </div>
 
-                </select>
-            </p>
-            <button type="submit" class="btn btn-success w-100">Зарегистрироваться</button>
-        </form>
-    </div>
+        <div class="form-group">
+            <label class="form-label">Пароль</label>
+            <input type="password" name="password" autocomplete="off" class="form-control {% if errors.password %}is-invalid{% endif %}" placeholder="Минимум 6 символов">
+            {% if errors.password %}<small class="error-text">{{ errors.password }}</small>{% endif %}
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">Роль</label>
+            <select name="role" class="form-control {% if errors.role %}is-invalid{% endif %}">
+                <option value="user" {{ 'selected' if form_data.role == 'user' }}>Исследователь</option>
+                <option value="company" {{ 'selected' if form_data.role == 'company' }}>Компания</option>
+            </select>
+            {% if errors.role %}<small class="error-text">{{ errors.role }}</small>{% endif %}
+        </div>
+
+        <button type="submit" class="btn btn-primary w-100 mt-10">Зарегистрироваться</button>
+    </form>
+    <p class="text-center mt-20 text-muted mb-0">Уже есть аккаунт? <a href="{{ url_for('login') }}" class="link-primary">Войти</a></p>
+</div>
 {% endblock %}
